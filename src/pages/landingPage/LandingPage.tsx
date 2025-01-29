@@ -7,7 +7,7 @@ export default function LandingPage() {
         <h1 className="mb-4 text-2xl font-bold">Aprende el alfabeto español</h1>
         <Link
           to="/test"
-          className="inline-block rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white hover:bg-blue-600"
+          className="inline-block rounded-xl bg-blue-500 px-8 py-6 font-semibold text-white hover:bg-blue-600"
         >
           Empezar
         </Link>
