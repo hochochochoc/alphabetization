@@ -93,6 +93,7 @@ const TestPage = () => {
         );
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
+        audio.volume = 1.0;
         await audio.play();
         URL.revokeObjectURL(url);
       }
