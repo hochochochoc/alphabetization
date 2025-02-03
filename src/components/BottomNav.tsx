@@ -37,7 +37,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ className }) => {
             className={`mx-1 flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200 ${
               isActive(item.path)
                 ? "scale-110 bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-md"
-                : "text-blue-600/70 hover:scale-105 hover:bg-blue-50/80"
+                : "text-blue-600/70 hover:scale-100 hover:bg-blue-50/80"
             }`}
           >
             <item.icon size={20} strokeWidth={2} />
