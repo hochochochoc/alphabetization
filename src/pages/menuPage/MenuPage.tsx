@@ -40,6 +40,9 @@ const MenuPage: React.FC = () => {
     if (mode === "writing") {
       navigate("/writing");
     }
+    if (mode === "reading") {
+      navigate("/reading");
+    }
     // Other modes can be handled here when needed
   };
 

@@ -381,10 +381,10 @@ const WritingTestPage = () => {
           <span className="text-lg font-semibold">Escucha otra vez</span>
         </button>
 
-        <div className="relative mb-6 aspect-square w-full">
+        <div className="relative mb-6 h-92 w-full">
           <canvas
             ref={canvasRef}
-            className="w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
+            className="h-full w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}

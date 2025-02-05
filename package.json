@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-polly": "^3.741.0",
     "@aws-sdk/client-textract": "^3.741.0",
+    "@aws-sdk/client-transcribe": "^3.741.0",
     "@tailwindcss/vite": "^4.0.0",
     "@tensorflow/tfjs": "^4.22.0",
     "lucide-react": "^0.474.0",
