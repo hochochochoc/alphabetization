@@ -270,7 +270,7 @@ const WritingTestPage = () => {
         clearCanvas();
       }
     } catch (error) {
-      console.error("Error analyzing handwriting:", error);
+      console.error(error);
       setResult("incorrect");
     } finally {
       setIsLoading(false);
@@ -363,7 +363,7 @@ const WritingTestPage = () => {
         <div className="relative mb-6 aspect-square w-full">
           <canvas
             ref={canvasRef}
-            className="w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
+            className="h-full w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
