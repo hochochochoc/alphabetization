@@ -4,6 +4,7 @@ import LandingPage from "./pages/landingPage/LandingPage";
 import TestPage from "./pages/testPage/TestPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
 import MenuPage from "./pages/menuPage/MenuPage";
+import ResultsPage from "./pages/resultsPage/ResultsPage";
 
 // import { AuthProvider } from "./contexts/AuthContext";
 
@@ -15,6 +16,7 @@ function App() {
       <Route path="/test" element={<TestPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/menu" element={<MenuPage />} />
+      <Route path="/history" element={<ResultsPage />} />
     </Routes>
     // </AuthProvider>
   );

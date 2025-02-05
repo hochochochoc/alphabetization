@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, User, ClipboardList, History } from "lucide-react";
+import { Calendar, User, ClipboardList, Ellipsis } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface MenuItem {
@@ -19,8 +19,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ className }) => {
   const menuItems: MenuItem[] = [
     { title: "Calendar", icon: Calendar, path: "/menu" },
     { title: "Profile", icon: User, path: "/profile" },
-    { title: "Plans", icon: ClipboardList, path: "/plans" },
-    { title: "History", icon: History, path: "/history" },
+    { title: "Plans", icon: ClipboardList, path: "/history" },
+    { title: "History", icon: Ellipsis, path: "/history" },
   ];
 
   const isActive = (path: string): boolean => location.pathname === path;
