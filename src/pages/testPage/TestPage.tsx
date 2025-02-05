@@ -224,10 +224,10 @@ const TestPage = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+      <div className="flex w-full max-w-md flex-col justify-center rounded-2xl bg-white p-8 shadow-xl">
         <button
           onClick={playSound}
-          className="mt-16 mb-28 flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white p-6 text-sky-400 transition-colors duration-200 hover:bg-blue-700"
+          className="mt-6 mb-14 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-6 py-12 text-sky-400 transition-colors duration-200 hover:bg-blue-700"
         >
           <Volume2 size={32} />
           <span className="text-xl font-semibold">Escucha otra vez</span>
