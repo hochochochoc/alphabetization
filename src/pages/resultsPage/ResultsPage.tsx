@@ -1,5 +1,6 @@
 import { ArrowLeft, Trophy, Star, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BottomNav from "../../components/BottomNav";
 
 const ResultsPage = () => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const ResultsPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="mb-8 grid grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white p-4 shadow-md">
+        <div className="mb-4 grid grid-cols-2 gap-4">
+          <div className="rounded-xl bg-white px-4 py-3 shadow-md">
             <div className="mb-2 flex items-center gap-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
               <span className="text-sm font-medium text-gray-600">Puntos</span>
@@ -28,7 +29,7 @@ const ResultsPage = () => {
             <p className="text-2xl font-bold text-gray-800">1,250</p>
           </div>
 
-          <div className="rounded-xl bg-white p-4 shadow-md">
+          <div className="rounded-xl bg-white px-4 py-3 shadow-md">
             <div className="mb-2 flex items-center gap-2">
               <Star className="h-5 w-5 text-blue-500" />
               <span className="text-sm font-medium text-gray-600">Nivel</span>
@@ -38,8 +39,8 @@ const ResultsPage = () => {
         </div>
 
         {/* Progress Section */}
-        <div className="mb-8 rounded-xl bg-white p-6 shadow-md">
-          <h2 className="mb-4 text-lg font-semibold text-gray-800">Progreso</h2>
+        <div className="mb-4 rounded-xl bg-white px-6 py-4 shadow-md">
+          <h2 className="mb-2 text-lg font-semibold text-gray-800">Progreso</h2>
 
           <div className="space-y-4">
             <div>
@@ -81,8 +82,8 @@ const ResultsPage = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-xl bg-white p-6 shadow-md">
-          <h2 className="mb-4 text-lg font-semibold text-gray-800">
+        <div className="rounded-xl bg-white px-6 py-4 shadow-md">
+          <h2 className="mb-2 text-lg font-semibold text-gray-800">
             Actividad Reciente
           </h2>
 
@@ -113,6 +114,7 @@ const ResultsPage = () => {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 };
