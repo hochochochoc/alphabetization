@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Volume2 } from "lucide-react";
+import { Volume2, ArrowLeft } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
+import { useNavigate } from "react-router-dom";
 
 const spanishLetters = [
   { letter: "A", voice: "A" },
@@ -54,6 +55,7 @@ const generateRound = () => {
 };
 
 const TestPage = () => {
+  const navigate = useNavigate();
   const [score, setScore] = useState(0);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
@@ -189,24 +191,35 @@ const TestPage = () => {
     <div
       className={`flex min-h-screen flex-col items-center p-4 transition-colors duration-300 ${getBgColor()}`}
     >
-      <div className="w-[90%]">
-        <div className="mb-1 flex w-full max-w-md items-center justify-between">
-          <div className="text-xs font-bold text-blue-800">
-            {score} SEGUIDAS
+      <div className="mb-2 flex w-full max-w-md items-center justify-between gap-4">
+        <button
+          onClick={() => navigate("/menu")}
+          className="flex items-center justify-center rounded-full bg-white p-2 shadow-md hover:bg-gray-50"
+        >
+          <ArrowLeft className="h-6 w-6 text-gray-600" />
+        </button>
+        <div className="mt-3 w-[90%] pr-4">
+          <div className="mb-1 flex w-full max-w-md items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-xs font-bold text-blue-800">
+                {score} SEGUIDAS
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="mb-8 h-3 w-full max-w-md overflow-hidden rounded-full bg-blue-200">
-          <div
-            className="h-full rounded-full bg-blue-600 transition-all duration-300"
-            style={{ width: `${(currentRound / rounds.length) * 100}%` }}
-          >
+          <div className="mb-4 h-3 w-full max-w-md overflow-hidden rounded-full bg-blue-200">
             <div
-              className="mx-auto h-2/5 translate-y-0.5 transform rounded-full bg-blue-400/50"
-              style={{
-                width: Math.max(80, (currentRound / rounds.length) * 90) + "%",
-              }}
-            />
+              className="h-full rounded-full bg-blue-600 transition-all duration-300"
+              style={{ width: `${(currentRound / rounds.length) * 100}%` }}
+            >
+              <div
+                className="mx-auto h-2/5 translate-y-0.5 transform rounded-full bg-blue-400/50"
+                style={{
+                  width:
+                    Math.max(80, (currentRound / rounds.length) * 90) + "%",
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

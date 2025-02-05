@@ -56,7 +56,7 @@ const MenuPage: React.FC = () => {
     {
       id: "reading",
       icon: <BookOpen className="h-6 w-6 text-blue-500" />,
-      title: "Pronunciación",
+      title: "Leer",
       description: "Mejora tu pronunciación y lectura",
     },
     {
