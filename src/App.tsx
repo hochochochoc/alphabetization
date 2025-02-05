@@ -5,6 +5,7 @@ import TestPage from "./pages/testPage/TestPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
 import MenuPage from "./pages/menuPage/MenuPage";
 import ResultsPage from "./pages/resultsPage/ResultsPage";
+import WritingTestPage from "./pages/writingTestPage.tsx/writingTest";
 
 // import { AuthProvider } from "./contexts/AuthContext";
 
@@ -17,6 +18,7 @@ function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/menu" element={<MenuPage />} />
       <Route path="/history" element={<ResultsPage />} />
+      <Route path="/writing" element={<WritingTestPage />} />
     </Routes>
     // </AuthProvider>
   );
