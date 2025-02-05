@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Mic } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -62,10 +62,7 @@ const ReadingTestPage = () => {
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioDataRef = useRef<Blob[]>([]);
+
   const [rounds, setRounds] = useState(
     Array(8)
       .fill(null)
