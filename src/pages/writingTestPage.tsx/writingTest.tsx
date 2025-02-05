@@ -161,19 +161,37 @@ const WritingTestPage = () => {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+
+    const size = Math.min(rect.width, rect.height);
+
+    canvas.width = size;
+    canvas.height = size;
 
     ctx.strokeStyle = "#2563eb";
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 6;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
   };
 
   useEffect(() => {
     initCanvas();
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener("touchstart", (e) => e.preventDefault(), {
+        passive: false,
+      });
+      canvas.addEventListener("touchmove", (e) => e.preventDefault(), {
+        passive: false,
+      });
+    }
     window.addEventListener("resize", initCanvas);
-    return () => window.removeEventListener("resize", initCanvas);
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener("touchstart", (e) => e.preventDefault());
+        canvas.removeEventListener("touchmove", (e) => e.preventDefault());
+      }
+      window.removeEventListener("resize", initCanvas);
+    };
   }, []);
 
   const clearCanvas = () => {
@@ -207,7 +225,6 @@ const WritingTestPage = () => {
 
   const draw = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDrawing) return;
-    e.preventDefault();
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -286,7 +303,7 @@ const WritingTestPage = () => {
   if (isGameComplete) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-100 to-white p-4">
-        <div className="rounded-2xl bg-white p-8 text-center shadow-xl">
+        <div className="rounded-2xl p-8 text-center">
           <h1 className="mb-4 text-2xl font-bold">¡Felicitaciones!</h1>
           <p className="mb-8">
             Has completado el ejercicio con {score} respuestas correctas.
@@ -351,7 +368,7 @@ const WritingTestPage = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="h-full w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <button
           onClick={playSound}
           className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-4 text-sky-400 transition-colors duration-200 hover:bg-blue-700 hover:text-white"
@@ -363,13 +380,19 @@ const WritingTestPage = () => {
         <div className="relative mb-6 aspect-square w-full">
           <canvas
             ref={canvasRef}
-            className="h-full w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
+            className="w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              startDrawing(e);
+            }}
+            onTouchMove={(e) => {
+              e.preventDefault();
+              draw(e);
+            }}
             onTouchEnd={stopDrawing}
           />
           <button
