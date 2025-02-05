@@ -61,7 +61,7 @@ const spanishLetters = [
   { letter: "R", voice: "erre" },
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
-  { letter: "U", voice: "U" },
+  // { letter: "U", voice: "U" },
   { letter: "V", voice: "uve" },
   { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
@@ -317,6 +317,16 @@ const WritingTestPage = () => {
                       ],
                   ),
               );
+              setTimeout(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+                ctx.strokeStyle = "#2563eb";
+                ctx.lineWidth = 6;
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+              }, 0);
             }}
             className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white hover:bg-blue-600"
           >
