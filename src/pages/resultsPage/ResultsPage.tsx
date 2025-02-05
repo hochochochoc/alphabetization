@@ -69,13 +69,11 @@ const ResultsPage = () => {
 
             <div>
               <div className="mb-2 flex justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  Pronunciación
-                </span>
+                <span className="text-sm font-medium text-gray-600">Leer</span>
                 <span className="text-sm font-medium text-gray-800">60%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-[60%] rounded-full bg-purple-500" />
+                <div className="h-full w-[60%] rounded-full bg-sky-500" />
               </div>
             </div>
           </div>
