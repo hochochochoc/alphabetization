@@ -47,17 +47,17 @@ const spanishLetters = [
   { letter: "F", voice: "efe" },
   { letter: "G", voice: "ge" },
   { letter: "H", voice: "hache" },
-  { letter: "I", voice: "I" },
-  { letter: "J", voice: "jota" },
+  // { letter: "I", voice: "I" },
+  // { letter: "J", voice: "jota" },
   { letter: "K", voice: "ka" },
   { letter: "L", voice: "ele" },
   { letter: "LL", voice: "eyye" },
   { letter: "M", voice: "eme" },
   { letter: "N", voice: "ene" },
   // { letter: "Ñ", voice: "eñe" },
-  { letter: "O", voice: "O" },
+  // { letter: "O", voice: "O" },
   { letter: "P", voice: "pe" },
-  { letter: "Q", voice: "cu" },
+  // { letter: "Q", voice: "cu" },
   { letter: "R", voice: "erre" },
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
@@ -75,6 +75,7 @@ const WritingTestPage = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
   const [score, setScore] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -272,6 +273,7 @@ const WritingTestPage = () => {
       setResult(isCorrect ? "correct" : "incorrect");
       if (isCorrect) {
         setScore(score + 1);
+        setTotalCorrect((prev) => prev + 1);
       } else {
         setScore(0);
         clearCanvas();
@@ -296,12 +298,14 @@ const WritingTestPage = () => {
         <div className="rounded-2xl p-8 text-center">
           <h1 className="mb-4 text-2xl font-bold">¡Felicitaciones!</h1>
           <p className="mb-8">
-            Has completado el ejercicio con {score} respuestas correctas.
+            Has completado el ejercicio con {totalCorrect} respuestas correctas
+            de {rounds.length} letras.
           </p>
           <button
             onClick={() => {
               setCurrentRound(0);
               setScore(0);
+              setTotalCorrect(0);
               setIsGameComplete(false);
               setRounds(
                 Array(8)
