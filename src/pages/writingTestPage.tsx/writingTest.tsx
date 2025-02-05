@@ -54,7 +54,7 @@ const spanishLetters = [
   { letter: "LL", voice: "eyye" },
   { letter: "M", voice: "eme" },
   { letter: "N", voice: "ene" },
-  { letter: "Ñ", voice: "eñe" },
+  // { letter: "Ñ", voice: "eñe" },
   { letter: "O", voice: "O" },
   { letter: "P", voice: "pe" },
   { letter: "Q", voice: "cu" },
@@ -162,10 +162,8 @@ const WritingTestPage = () => {
 
     const rect = canvas.getBoundingClientRect();
 
-    const size = Math.min(rect.width, rect.height);
-
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
     ctx.strokeStyle = "#2563eb";
     ctx.lineWidth = 6;
@@ -177,19 +175,11 @@ const WritingTestPage = () => {
     initCanvas();
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.addEventListener("touchstart", (e) => e.preventDefault(), {
-        passive: false,
-      });
-      canvas.addEventListener("touchmove", (e) => e.preventDefault(), {
-        passive: false,
-      });
+      // Disable default touch behavior for the entire canvas
+      canvas.style.touchAction = "none";
     }
     window.addEventListener("resize", initCanvas);
     return () => {
-      if (canvas) {
-        canvas.removeEventListener("touchstart", (e) => e.preventDefault());
-        canvas.removeEventListener("touchmove", (e) => e.preventDefault());
-      }
       window.removeEventListener("resize", initCanvas);
     };
   }, []);
@@ -385,13 +375,11 @@ const WritingTestPage = () => {
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              startDrawing(e);
+            onTouchStart={(e: React.TouchEvent) => {
+              startDrawing(e as unknown as React.TouchEvent | React.MouseEvent);
             }}
-            onTouchMove={(e) => {
-              e.preventDefault();
-              draw(e);
+            onTouchMove={(e: React.TouchEvent) => {
+              draw(e as unknown as React.TouchEvent | React.MouseEvent);
             }}
             onTouchEnd={stopDrawing}
           />
