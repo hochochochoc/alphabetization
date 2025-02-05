@@ -17,7 +17,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ className }) => {
   const location = useLocation();
 
   const menuItems: MenuItem[] = [
-    { title: "Calendar", icon: Calendar, path: "/test" },
+    { title: "Calendar", icon: Calendar, path: "/menu" },
     { title: "Profile", icon: User, path: "/profile" },
     { title: "Plans", icon: ClipboardList, path: "/plans" },
     { title: "History", icon: History, path: "/history" },

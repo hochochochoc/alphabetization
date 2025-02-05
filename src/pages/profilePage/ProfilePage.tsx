@@ -1,5 +1,4 @@
 import React from "react";
-import { UserPlus } from "lucide-react";
 import BottomNav from "../../components/BottomNav";
 
 interface ProfilePageProps {
