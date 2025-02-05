@@ -7,6 +7,37 @@ import {
 } from "@aws-sdk/client-textract";
 import { useNavigate } from "react-router-dom";
 
+const LETTER_PATTERNS = {
+  A: /^[AaÁáÀà@4]+$/,
+  B: /^[Bb8ß]+$/,
+  C: /^[Cc¢€]+$/,
+  D: /^[Dd]+$/,
+  E: /^[EeÉéÈè3€]+$/,
+  F: /^[Ff]+$/,
+  G: /^[Gg6]+$/,
+  H: /^[Hh]+$/,
+  I: /^[IiÍíÌì1|l]+$/,
+  J: /^[Jj]+$/,
+  K: /^[Kk]+$/,
+  L: /^[Ll1|I]+$/,
+  LL: /^(LL|ll|Ll|lL)+$/,
+  M: /^[Mm]+$/,
+  N: /^[Nn]+$/,
+  Ñ: /^[Ññ]+$/,
+  O: /^[OoÓóÒò0Q]+$/,
+  P: /^[Pp]+$/,
+  Q: /^[Qq]+$/,
+  R: /^[Rr]+$/,
+  S: /^[Ss5\$]+$/,
+  T: /^[Tt7]+$/,
+  U: /^[UuÚúÙù]+$/,
+  V: /^[Vv]+$/,
+  W: /^[Ww]+$/,
+  X: /^[Xx×]+$/,
+  Y: /^[Yy]+$/,
+  Z: /^[Zz2]+$/,
+};
+
 const spanishLetters = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
@@ -129,7 +160,6 @@ const WritingTestPage = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size to match display size
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -177,7 +207,7 @@ const WritingTestPage = () => {
 
   const draw = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDrawing) return;
-    e.preventDefault(); // Prevent scrolling on touch devices
+    e.preventDefault();
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -210,7 +240,6 @@ const WritingTestPage = () => {
     setIsLoading(true);
 
     try {
-      // Convert canvas to JPEG
       const dataUrl = canvas.toDataURL("image/jpeg");
       const binaryData = atob(dataUrl.split(",")[1]);
       const array = new Uint8Array(binaryData.length);
@@ -218,30 +247,27 @@ const WritingTestPage = () => {
         array[i] = binaryData.charCodeAt(i);
       }
 
-      // Send to Textract
       const command = new DetectDocumentTextCommand({
-        Document: {
-          Bytes: array,
-        },
+        Document: { Bytes: array },
       });
 
       const response = await textract.send(command);
-
-      // Get the detected text
       const detectedText =
         response.Blocks?.find((block) => block.BlockType === "LINE")?.Text ||
         "";
 
-      // Compare with target letter (case-insensitive)
-      const isCorrect =
-        detectedText.trim().toLowerCase() ===
-        rounds[currentRound].letter.toLowerCase();
+      const pattern =
+        LETTER_PATTERNS[
+          rounds[currentRound].letter as keyof typeof LETTER_PATTERNS
+        ];
+      const isCorrect = pattern ? pattern.test(detectedText.trim()) : false;
 
       setResult(isCorrect ? "correct" : "incorrect");
       if (isCorrect) {
         setScore(score + 1);
       } else {
         setScore(0);
+        clearCanvas();
       }
     } catch (error) {
       console.error("Error analyzing handwriting:", error);
