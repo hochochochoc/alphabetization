@@ -11,7 +11,7 @@ const LETTER_PRONUNCIATIONS = {
   E: /^(eh?)$/i,
   F: /^(eh?feh?)$/i,
   G: /^(heh?)$/i,
-  H: /^(ah?cheh?)$/i,
+  H: /^(ah?cheh?|h)$/i,
   K: /^(kah?)$/i,
   L: /^(eh?leh?)$/i,
   LL: /^(eh?yeh?)$/i,
@@ -22,10 +22,10 @@ const LETTER_PRONUNCIATIONS = {
   S: /^(eh?seh?)$/i,
   T: /^(teh?)$/i,
   V: /^(oo?veh?)$/i,
-  W: /^(oo?veh? doh?bleh?)$/i,
-  X: /^(eh?kees)$/i,
+  W: /^(oo?veh? doh?bleh?|w)$/i,
+  X: /^(eh?kees|x)$/i,
   Y: /^(ee?gree?eh?gah?|y)$/i,
-  Z: /^(seh?tah?)$/i,
+  Z: /^(seh?tah?|z)$/i,
 };
 
 const spanishLetters = [
@@ -36,7 +36,7 @@ const spanishLetters = [
   //   { letter: "E", voice: "E" },
   //   { letter: "F", voice: "efe" },
   //   { letter: "G", voice: "ge" },
-  //   { letter: "H", voice: "hache" },
+  { letter: "H", voice: "hache" },
   //   { letter: "K", voice: "ka" },
   //   { letter: "L", voice: "ele" },
   //   { letter: "LL", voice: "eyye" },
@@ -47,10 +47,10 @@ const spanishLetters = [
   //   { letter: "S", voice: "ese" },
   //   { letter: "T", voice: "te" },
   //   { letter: "V", voice: "uve" },
-  //   { letter: "W", voice: "uve doble" },
-  //   { letter: "X", voice: "equis" },
+  { letter: "W", voice: "uve doble" },
+  { letter: "X", voice: "equis" },
   { letter: "Y", voice: "i griega" },
-  //   { letter: "Z", voice: "zeta" },
+  { letter: "Z", voice: "zeta" },
 ];
 
 const ReadingTestPage = () => {
