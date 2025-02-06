@@ -1,9 +1,83 @@
-import { ArrowLeft, Trophy, Star, Bookmark } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
 
+type ColorType = "blue" | "green" | "yellow";
+
+interface LetterProgress {
+  letter: string;
+  progress: number;
+}
+
+interface Activity {
+  name: string;
+  color: ColorType;
+  completedCount: number;
+  letters: LetterProgress[];
+}
+
 const ResultsPage = () => {
   const navigate = useNavigate();
+
+  const activities: Activity[] = [
+    {
+      name: "Escuchar",
+      color: "blue",
+      completedCount: 15,
+      letters: [
+        { letter: "Ñ", progress: 75 },
+        { letter: "R", progress: 35 },
+        { letter: "RR", progress: 20 },
+        { letter: "X", progress: 15 },
+        { letter: "Y", progress: 10 },
+      ],
+    },
+    {
+      name: "Escribir",
+      color: "green",
+      completedCount: 12,
+      letters: [
+        { letter: "D", progress: 60 },
+        { letter: "LL", progress: 45 },
+        { letter: "Q", progress: 25 },
+        { letter: "V", progress: 15 },
+        { letter: "W", progress: 8 },
+      ],
+    },
+    {
+      name: "Leer",
+      color: "yellow",
+      completedCount: 18,
+      letters: [
+        { letter: "F", progress: 80 },
+        { letter: "G", progress: 55 },
+        { letter: "J", progress: 30 },
+        { letter: "Z", progress: 20 },
+        { letter: "K", progress: 5 },
+      ],
+    },
+  ];
+
+  const getColorClass = (
+    color: ColorType,
+    opacity: boolean = false,
+  ): string => {
+    const colorMap = {
+      blue: opacity ? "bg-blue-100" : "bg-blue-500",
+      green: opacity ? "bg-green-100" : "bg-green-500",
+      yellow: opacity ? "bg-yellow-100" : "bg-yellow-500",
+    };
+    return colorMap[color];
+  };
+
+  const getBorderColorClass = (color: ColorType): string => {
+    const colorMap = {
+      blue: "border-blue-500",
+      green: "border-green-500",
+      yellow: "border-yellow-500",
+    };
+    return colorMap[color];
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white p-4">
@@ -19,99 +93,51 @@ const ResultsPage = () => {
           <h1 className="text-2xl font-bold text-gray-800">Resultados</h1>
         </div>
 
-        {/* Stats Cards */}
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white px-4 py-3 shadow-md">
-            <div className="mb-2 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              <span className="text-sm font-medium text-gray-600">Puntos</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-800">1,250</p>
-          </div>
+        {/* Activities Progress */}
+        <div className="space-y-6">
+          {activities.map((activity, index) => (
+            <div key={index} className="rounded-xl bg-white p-6 shadow-md">
+              <h2 className="mb-4 text-lg font-semibold text-gray-800">
+                {activity.name}
+              </h2>
 
-          <div className="rounded-xl bg-white px-4 py-3 shadow-md">
-            <div className="mb-2 flex items-center gap-2">
-              <Star className="h-5 w-5 text-blue-500" />
-              <span className="text-sm font-medium text-gray-600">Nivel</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-800">5</p>
-          </div>
-        </div>
-
-        {/* Progress Section */}
-        <div className="mb-4 rounded-xl bg-white px-6 py-4 shadow-md">
-          <h2 className="mb-2 text-lg font-semibold text-gray-800">Progreso</h2>
-
-          <div className="space-y-4">
-            <div>
-              <div className="mb-2 flex justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  Escuchar
-                </span>
-                <span className="text-sm font-medium text-gray-800">75%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-3/4 rounded-full bg-blue-500" />
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-2 flex justify-between">
-                <span className="text-sm font-medium text-gray-600">
-                  Escribir
-                </span>
-                <span className="text-sm font-medium text-gray-800">45%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-[45%] rounded-full bg-green-500" />
+              <div className="grid grid-cols-3 gap-4">
+                <div
+                  className={`aspect-square rounded-lg ${getColorClass(activity.color)} flex flex-col items-center justify-center p-2 text-center`}
+                >
+                  <p className="text-3xl font-bold text-white">
+                    {activity.completedCount}
+                  </p>
+                  <span className="text-xs font-medium text-white">
+                    Completadas
+                  </span>
+                </div>
+                {activity.letters.map((letterProgress, letterIndex) => (
+                  <div key={letterIndex} className="relative">
+                    <div
+                      className={`aspect-square rounded-lg ${getColorClass(activity.color, true)} overflow-hidden border shadow-lg ${getBorderColorClass(activity.color)}`}
+                    >
+                      {/* Progress fill */}
+                      <div
+                        className={`absolute bottom-0 left-0 w-full rounded-b-lg ${getColorClass(activity.color)}`}
+                        style={{
+                          height: `${letterProgress.progress}%`,
+                          transition: "height 0.3s ease-in-out",
+                        }}
+                      />
+                      {/* Letter */}
+                      <div className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-gray-800">
+                        {letterProgress.letter}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div>
-              <div className="mb-2 flex justify-between">
-                <span className="text-sm font-medium text-gray-600">Leer</span>
-                <span className="text-sm font-medium text-gray-800">60%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-[60%] rounded-full bg-sky-500" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="rounded-xl bg-white px-6 py-4 shadow-md">
-          <h2 className="mb-2 text-lg font-semibold text-gray-800">
-            Actividad Reciente
-          </h2>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-blue-100 p-2">
-                <Bookmark className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-800">
-                  Completaste Alfabeto
-                </p>
-                <p className="text-sm text-gray-500">Hace 2 horas</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-green-100 p-2">
-                <Star className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-800">
-                  Nuevo Nivel Alcanzado
-                </p>
-                <p className="text-sm text-gray-500">Hace 1 día</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
+      <div className="h-20"></div>
       <BottomNav />
     </div>
   );
