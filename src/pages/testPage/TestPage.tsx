@@ -59,6 +59,7 @@ const TestPage = () => {
   const [score, setScore] = useState(0);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [rounds, setRounds] = useState(
@@ -138,8 +139,10 @@ const TestPage = () => {
     setResult(isCorrect ? "correct" : "incorrect");
     if (isCorrect) {
       setScore(score + 1);
+      setTotalCorrect((prev) => prev + 1);
     } else {
       setScore(0);
+      setTotalCorrect((prev) => prev - 1);
     }
   };
 
@@ -165,7 +168,7 @@ const TestPage = () => {
         <div className="rounded-2xl bg-white p-8 text-center shadow-xl">
           <h1 className="mb-4 text-2xl font-bold">¡Felicitaciones!</h1>
           <p className="mb-8">
-            Has completado el ejercicio con {score} respuestas correctas.
+            Has completado el ejercicio con {totalCorrect} respuestas correctas.
           </p>
           <button
             onClick={() => {
@@ -201,7 +204,9 @@ const TestPage = () => {
         <div className="mt-3 w-[90%] pr-4">
           <div className="mb-1 flex w-full max-w-md items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-xs font-bold text-blue-800">
+              <div
+                className={`text-xs font-bold text-blue-800 ${score < 2 ? "invisible" : "visible"}`}
+              >
                 {score} SEGUIDAS
               </div>
             </div>
@@ -229,7 +234,7 @@ const TestPage = () => {
           onClick={playSound}
           className="mt-6 mb-14 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-6 py-12 text-sky-400 transition-colors duration-200 hover:bg-blue-700"
         >
-          <Volume2 size={32} />
+          <Volume2 size={44} />
           <span className="text-xl font-semibold">Escucha otra vez</span>
         </button>
 

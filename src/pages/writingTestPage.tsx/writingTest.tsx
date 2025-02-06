@@ -50,7 +50,7 @@ const spanishLetters = [
   // { letter: "I", voice: "I" },
   // { letter: "J", voice: "jota" },
   { letter: "K", voice: "ka" },
-  { letter: "L", voice: "ele" },
+  // { letter: "L", voice: "ele" },
   { letter: "LL", voice: "eyye" },
   { letter: "M", voice: "eme" },
   { letter: "N", voice: "ene" },
