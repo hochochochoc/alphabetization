@@ -1,13 +1,16 @@
 import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
+import "dotenv/config";
 
-const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "IneedAjob123",
-  database: "alphabetization",
-});
+// const pool = mysql.createPool({
+//   host: "localhost",
+//   user: "root",
+//   password: "IneedAjob123",
+//   database: "alphabetization",
+// });
+
+const pool = mysql.createPool(process.env.MYSQL_URL);
 
 const app = express();
 app.use(cors());
@@ -41,7 +44,7 @@ app.get("/api/listening_progress", async (req, res) => {
       SELECT 
         target_letter,
         COUNT(*) as total_attempts,
-        COUNT(CASE WHEN correct = 1 THEN 1 END) * 10 as progress_percentage
+        GREATEST(0, SUM(CASE WHEN correct = 1 THEN 10 ELSE -10 END)) as progress_percentage
       FROM guess_history
       GROUP BY target_letter
       ORDER BY target_letter
