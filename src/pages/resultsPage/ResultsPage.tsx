@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
@@ -16,22 +17,70 @@ interface Activity {
   letters: LetterProgress[];
 }
 
+interface ProgressData {
+  progress_percentage: number;
+  total_attempts: number;
+}
+
+interface ProgressMap {
+  [key: string]: ProgressData;
+}
+
+interface ProgressItem {
+  target_letter: string;
+  progress_percentage: number;
+  total_attempts: number;
+}
+
 const ResultsPage = () => {
   const navigate = useNavigate();
+
+  const [listeningProgress, setListeningProgress] = useState<ProgressMap>({});
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3001/api/listening_progress",
+        );
+        const data = await response.json();
+        const progressMap = data.reduce(
+          (acc: ProgressMap, item: ProgressItem) => {
+            acc[item.target_letter] = {
+              progress_percentage: item.progress_percentage,
+              total_attempts: item.total_attempts,
+            };
+            return acc;
+          },
+          {},
+        );
+        setListeningProgress(progressMap);
+      } catch (error) {
+        console.error("Error fetching progress:", error);
+      }
+    };
+
+    fetchProgress();
+    const interval = setInterval(fetchProgress, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const activities: Activity[] = [
     {
       name: "Escuchar",
       color: "blue",
-      completedCount: 15,
-      letters: [
-        { letter: "Ñ", progress: 75 },
-        { letter: "R", progress: 35 },
-        { letter: "RR", progress: 20 },
-        { letter: "X", progress: 15 },
-        { letter: "Y", progress: 10 },
-      ],
+      completedCount: Object.values(listeningProgress).filter(
+        (p) => p.progress_percentage >= 100,
+      ).length,
+      letters: Object.entries(listeningProgress)
+        .map(([letter, data]) => ({
+          letter,
+          progress: data.progress_percentage || 0,
+        }))
+        .sort((a, b) => b.progress - a.progress)
+        .slice(0, 5),
     },
+
     {
       name: "Escribir",
       color: "green",
