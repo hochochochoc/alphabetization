@@ -134,9 +134,27 @@ const TestPage = () => {
     }
   }, [currentRound]);
 
-  const checkAnswer = () => {
+  const checkAnswer = async () => {
     const isCorrect = selectedLetter === rounds[currentRound].target;
     setResult(isCorrect ? "correct" : "incorrect");
+
+    try {
+      await fetch("http://localhost:3001/api/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target_letter: rounds[currentRound].target,
+          options: rounds[currentRound].options,
+          user_answer: selectedLetter,
+          correct: isCorrect,
+        }),
+      });
+    } catch (error) {
+      console.error("Error saving guess:", error);
+    }
+
     if (isCorrect) {
       setScore(score + 1);
       setTotalCorrect((prev) => prev + 1);
