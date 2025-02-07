@@ -13,6 +13,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/api/listening_progress", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      WITH LastTenAttempts AS (
+        SELECT 
+          target_letter,
+          correct,
+          ROW_NUMBER() OVER (PARTITION BY target_letter ORDER BY id DESC) as attempt_rank
+        FROM guess_history
+        HAVING attempt_rank <= 10
+      )
+      SELECT 
+        target_letter,
+        COUNT(*) as total_attempts,
+        CASE 
+          WHEN COUNT(*) < 4 THEN 0
+          ELSE GREATEST(0, ((SUM(correct) / COUNT(*) - 0.25) / 0.75) * 100)
+        END as progress_percentage
+      FROM LastTenAttempts
+      GROUP BY target_letter
+    `);
+
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/session", async (req, res) => {
   try {
     const {
