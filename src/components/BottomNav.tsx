@@ -18,7 +18,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ className }) => {
   const [isTabOpen, setIsTabOpen] = useState(false);
 
   const menuItems: MenuItem[] = [
-    { title: "Calendar", icon: Calendar, path: "/menu" },
+    { title: "Calendar", icon: Calendar, path: "/" },
     { title: "Profile", icon: User, path: "/profile" },
     { title: "Plans", icon: ClipboardList, path: "/history" },
   ];

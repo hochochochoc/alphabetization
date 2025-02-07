@@ -14,10 +14,10 @@ function App() {
   return (
     // <AuthProvider>
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/test" element={<TestPage />} />
       <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/menu" element={<MenuPage />} />
+      <Route path="/" element={<MenuPage />} />
       <Route path="/history" element={<ResultsPage />} />
       <Route path="/writing" element={<WritingTestPage />} />
       <Route path="/reading" element={<ReadingTestPage />} />

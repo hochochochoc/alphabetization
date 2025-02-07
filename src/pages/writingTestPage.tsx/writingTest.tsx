@@ -343,7 +343,7 @@ const WritingTestPage = () => {
     >
       <div className="mb-2 flex w-full max-w-md items-center justify-between gap-4">
         <button
-          onClick={() => navigate("/menu")}
+          onClick={() => navigate("/")}
           className="flex items-center justify-center rounded-full bg-white p-2 shadow-md hover:bg-gray-50"
         >
           <ArrowLeft className="h-6 w-6 text-gray-600" />
