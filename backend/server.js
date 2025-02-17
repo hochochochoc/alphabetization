@@ -16,22 +16,11 @@ app.use(express.json());
 app.get("/api/listening_progress", async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      WITH LastTenAttempts AS (
-        SELECT 
-          target_letter,
-          correct,
-          ROW_NUMBER() OVER (PARTITION BY target_letter ORDER BY id DESC) as attempt_rank
-        FROM guess_history
-        HAVING attempt_rank <= 10
-      )
       SELECT 
         target_letter,
         COUNT(*) as total_attempts,
-        CASE 
-          WHEN COUNT(*) < 4 THEN 0
-          ELSE GREATEST(0, ((SUM(correct) / COUNT(*) - 0.25) / 0.75) * 100)
-        END as progress_percentage
-      FROM LastTenAttempts
+        ROUND((SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) / 10) * 100, 1) as progress_percentage
+      FROM guess_history 
       GROUP BY target_letter
     `);
 
