@@ -294,7 +294,7 @@ const TestPage = () => {
             preserveAspectRatio="none"
           >
             <path
-              d="M70,7 L75,7 C84,6.5 92,12 92.5,20"
+              d="M70,7 L76,7 C84,6.8 92,13 93.2,20"
               stroke="white"
               strokeWidth="5"
               fill="none"
