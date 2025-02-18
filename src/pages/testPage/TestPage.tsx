@@ -272,9 +272,37 @@ const TestPage = () => {
         <button
           onClick={checkAnswer}
           disabled={!selectedLetter || result !== null}
-          className={`mt-8 w-full rounded-xl p-4 font-semibold text-white transition-colors duration-200 ${selectedLetter && !result ? "bg-blue-500 hover:bg-blue-600" : "cursor-not-allowed bg-gray-300"}`}
+          className={`relative mt-8 w-full rounded-full p-4 font-semibold text-white transition-colors duration-200 ${selectedLetter && !result ? "bg-blue-500 hover:bg-blue-600" : "cursor-not-allowed bg-gray-300"}`}
         >
-          Comprobar
+          <svg
+            className="absolute top-0 right-0 h-16 w-32"
+            viewBox="0 0 100 50"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M62,7 L63,7"
+              stroke="white"
+              strokeWidth="5"
+              fill="none"
+              strokeLinecap="round"
+              opacity="0.3"
+            />
+          </svg>
+          <svg
+            className="absolute top-0 right-0 h-16 w-32"
+            viewBox="0 0 100 50"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M70,7 L75,7 C84,6.5 92,12 92.5,20"
+              stroke="white"
+              strokeWidth="5"
+              fill="none"
+              strokeLinecap="round"
+              opacity="0.3"
+            />
+          </svg>
+          <span>Comprobar</span>
         </button>
       </div>
     </div>
