@@ -272,7 +272,7 @@ const TestPage = () => {
         <button
           onClick={checkAnswer}
           disabled={!selectedLetter || result !== null}
-          className={`relative mt-8 w-full rounded-full p-4 font-semibold text-white transition-colors duration-200 ${selectedLetter && !result ? "bg-blue-500 hover:bg-blue-600" : "cursor-not-allowed bg-gray-300"}`}
+          className={`relative mt-8 w-full rounded-full border-b-6 p-4 font-semibold text-white transition-colors duration-200 ${selectedLetter && !result ? "border-blue-800 bg-blue-500 hover:bg-blue-600" : "cursor-not-allowed border-gray-400 bg-gray-300"}`}
         >
           <svg
             className="absolute top-0 right-0 h-16 w-32"
