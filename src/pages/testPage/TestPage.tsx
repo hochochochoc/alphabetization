@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Howl } from "howler";
 import { Volume2, ArrowLeft } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 import { useNavigate } from "react-router-dom";
@@ -76,6 +77,36 @@ const TestPage = () => {
     },
   });
 
+  const correctSound = new Howl({
+    src: [
+      "https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3",
+    ],
+    volume: 1.0,
+    html5: true,
+    preload: true,
+    xhr: {
+      method: "GET",
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    },
+  });
+
+  const incorrectSound = new Howl({
+    src: [
+      "https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3",
+    ],
+    volume: 1.0,
+    html5: true,
+    preload: true,
+    xhr: {
+      method: "GET",
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    },
+  });
+
   const playSound = async () => {
     if (isGameComplete) return;
 
@@ -138,6 +169,16 @@ const TestPage = () => {
     const isCorrect = selectedLetter === rounds[currentRound].target;
     setResult(isCorrect ? "correct" : "incorrect");
 
+    if (isCorrect) {
+      correctSound.play();
+      setScore(score + 1);
+      setTotalCorrect((prev) => prev + 1);
+    } else {
+      incorrectSound.play();
+      setScore(0);
+      setTotalCorrect((prev) => prev - 1);
+    }
+
     try {
       await fetch("http://localhost:3001/api/session", {
         method: "POST",
@@ -153,14 +194,6 @@ const TestPage = () => {
       });
     } catch (error) {
       console.error("Error saving guess:", error);
-    }
-
-    if (isCorrect) {
-      setScore(score + 1);
-      setTotalCorrect((prev) => prev + 1);
-    } else {
-      setScore(0);
-      setTotalCorrect((prev) => prev - 1);
     }
   };
 
@@ -250,10 +283,10 @@ const TestPage = () => {
       <div className="flex w-full max-w-md flex-col justify-center rounded-2xl bg-white p-8 shadow-xl">
         <button
           onClick={playSound}
-          className="mt-6 mb-14 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-6 py-12 text-sky-400 transition-colors duration-200 hover:bg-blue-700"
+          className="mt-6 mb-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-6 py-12 text-sky-400 transition-colors duration-200 hover:bg-blue-700"
         >
-          <Volume2 size={44} />
-          <span className="text-xl font-semibold">Escucha otra vez</span>
+          <Volume2 size={62} />
+          <span className="text-lg font-semibold">Escucha otra vez</span>
         </button>
 
         <div className="grid grid-cols-2 gap-4">
