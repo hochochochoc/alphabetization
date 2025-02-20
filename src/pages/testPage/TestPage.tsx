@@ -81,7 +81,7 @@ const TestPage = () => {
     src: [
       "https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3",
     ],
-    volume: 1.0,
+    volume: 0.5,
     html5: true,
     preload: true,
     xhr: {
@@ -93,10 +93,8 @@ const TestPage = () => {
   });
 
   const incorrectSound = new Howl({
-    src: [
-      "https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3",
-    ],
-    volume: 1.0,
+    src: ["/mixkit-tech-break-fail-2947.wav"],
+    volume: 0.7,
     html5: true,
     preload: true,
     xhr: {
