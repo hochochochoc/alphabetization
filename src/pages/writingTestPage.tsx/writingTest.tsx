@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Volume2, ArrowLeft, Eraser } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
-import {
-  TextractClient,
-  DetectDocumentTextCommand,
-} from "@aws-sdk/client-textract";
+import { createWorker, PSM } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 
 const LETTER_PATTERNS = {
@@ -79,6 +76,7 @@ const WritingTestPage = () => {
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [tesseractWorker, setTesseractWorker] = useState<any>(null);
   const [rounds, setRounds] = useState(
     Array(8)
       .fill(null)
@@ -95,13 +93,41 @@ const WritingTestPage = () => {
     },
   });
 
-  const textract = new TextractClient({
-    region: import.meta.env.VITE_AWS_REGION || "eu-west-3",
-    credentials: {
-      accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || "",
-      secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || "",
-    },
-  });
+  // Initialize Tesseract worker
+  useEffect(() => {
+    const initTesseract = async () => {
+      try {
+        const worker = await createWorker();
+
+        // Use the correct initialization method for current API
+        await worker.load();
+        await worker.reinitialize("spa");
+
+        // Use the PSM enum for proper typing
+        await worker.setParameters({
+          tessedit_char_whitelist:
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁáÀàÉéÈèÍíÌìÓóÒòÚúÙùÑñ0123456789",
+          tessjs_create_hocr: "0",
+          tessjs_create_tsv: "0",
+          tessedit_pageseg_mode: PSM.SINGLE_CHAR,
+          tessedit_ocr_engine_mode: 1, // Neural net LSTM engine
+          preserve_interword_spaces: "0",
+          textord_heavy_noise: "1",
+          tessedit_write_images: "1",
+        });
+
+        setTesseractWorker(worker);
+      } catch (err) {
+        console.error("Tesseract init error:", err);
+      }
+    };
+
+    initTesseract();
+
+    return () => {
+      if (tesseractWorker) tesseractWorker.terminate();
+    };
+  }, []);
 
   const playSound = async () => {
     if (isGameComplete) return;
@@ -241,34 +267,95 @@ const WritingTestPage = () => {
     setIsDrawing(false);
   };
 
+  const preprocessImage = (canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return canvas;
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) return canvas;
+
+    // White background
+    tempCtx.fillStyle = "white";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    tempCtx.drawImage(canvas, 0, 0);
+
+    // Much more dramatic thickening and contrast
+    tempCtx.globalAlpha = 1.0;
+    tempCtx.drawImage(tempCanvas, 0, 0);
+    tempCtx.drawImage(tempCanvas, 1, 0);
+    tempCtx.drawImage(tempCanvas, 0, 1);
+    tempCtx.drawImage(tempCanvas, -1, 0);
+    tempCtx.drawImage(tempCanvas, 0, -1);
+
+    // Max contrast
+    const imageData = tempCtx.getImageData(
+      0,
+      0,
+      tempCanvas.width,
+      tempCanvas.height,
+    );
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      // Very aggressive threshold
+      if (data[i] < 230 || data[i + 1] < 230 || data[i + 2] < 230) {
+        data[i] = 0;
+        data[i + 1] = 0;
+        data[i + 2] = 0;
+        data[i + 3] = 255;
+      } else {
+        data[i] = 255;
+        data[i + 1] = 255;
+        data[i + 2] = 255;
+        data[i + 3] = 255;
+      }
+    }
+    tempCtx.putImageData(imageData, 0, 0);
+
+    return tempCanvas;
+  };
+
   const checkDrawing = async () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !tesseractWorker) return;
 
     setIsLoading(true);
 
     try {
-      const dataUrl = canvas.toDataURL("image/jpeg");
-      const binaryData = atob(dataUrl.split(",")[1]);
-      const array = new Uint8Array(binaryData.length);
-      for (let i = 0; i < binaryData.length; i++) {
-        array[i] = binaryData.charCodeAt(i);
+      // Preprocess the canvas for better recognition
+      const processedCanvas = preprocessImage(canvas);
+      const dataUrl = processedCanvas.toDataURL("image/jpeg", 1.0);
+
+      // Try different recognition strategies
+      const result = await tesseractWorker.recognize(dataUrl);
+      let detectedText = result.data.text.trim();
+
+      // If no text detected, try more aggressive processing
+      if (!detectedText && processedCanvas !== canvas) {
+        // Create a thicker version
+        const ctx = processedCanvas.getContext("2d");
+        if (ctx) {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(processedCanvas, 1, 1);
+          ctx.drawImage(processedCanvas, -1, -1);
+          const secondAttempt = await tesseractWorker.recognize(
+            processedCanvas.toDataURL("image/jpeg", 1.0),
+          );
+          detectedText = secondAttempt.data.text.trim();
+        }
       }
 
-      const command = new DetectDocumentTextCommand({
-        Document: { Bytes: array },
-      });
+      // More lenient matching - remove non-alphanumeric characters
+      detectedText = detectedText.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, "");
 
-      const response = await textract.send(command);
-      const detectedText =
-        response.Blocks?.find((block) => block.BlockType === "LINE")?.Text ||
-        "";
-
+      // Check if the detected text matches the expected pattern
       const pattern =
         LETTER_PATTERNS[
           rounds[currentRound].letter as keyof typeof LETTER_PATTERNS
         ];
-      const isCorrect = pattern ? pattern.test(detectedText.trim()) : false;
+      const isCorrect = pattern ? pattern.test(detectedText) : false;
 
       setResult(isCorrect ? "correct" : "incorrect");
       if (isCorrect) {
@@ -279,7 +366,7 @@ const WritingTestPage = () => {
         clearCanvas();
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error recognizing text:", error);
       setResult("incorrect");
     } finally {
       setIsLoading(false);
