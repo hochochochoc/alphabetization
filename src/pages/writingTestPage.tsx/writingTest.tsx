@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Volume2, ArrowLeft, Eraser } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
-import { createWorker, PSM } from "tesseract.js";
+import "./moduleShim";
+import * as paddleOCR from "@paddlejs-models/ocr";
 import { useNavigate } from "react-router-dom";
 
 const LETTER_PATTERNS = {
@@ -95,37 +96,39 @@ const WritingTestPage = () => {
 
   // Initialize Tesseract worker
   useEffect(() => {
-    const initTesseract = async () => {
+    // Updated initialization function
+    const initPaddleOCR = async () => {
       try {
-        const worker = await createWorker();
-
-        // Use the correct initialization method for current API
-        await worker.load();
-        await worker.reinitialize("spa");
-
-        // Use the PSM enum for proper typing
-        await worker.setParameters({
-          tessedit_char_whitelist:
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁáÀàÉéÈèÍíÌìÓóÒòÚúÙùÑñ0123456789",
-          tessjs_create_hocr: "0",
-          tessjs_create_tsv: "0",
-          tessedit_pageseg_mode: PSM.SINGLE_CHAR,
-          tessedit_ocr_engine_mode: 1, // Neural net LSTM engine
-          preserve_interword_spaces: "0",
-          textord_heavy_noise: "1",
-          tessedit_write_images: "1",
+        // Initialize PaddleOCR using the available API
+        const ocrDetector = new paddleOCR.Detector({
+          modelPath: "https://paddlejs.bj.bcebos.com/models/det_db/model",
+          scale: 1,
         });
 
-        setTesseractWorker(worker);
+        const ocrRecognizer = new paddleOCR.Recognizer({
+          modelPath: "https://paddlejs.bj.bcebos.com/models/rec_crnn/model",
+          vocabulary:
+            "https://paddlejs.bj.bcebos.com/models/rec_crnn/vocab.json",
+        });
+
+        // Load both models
+        await ocrDetector.load();
+        await ocrRecognizer.load();
+
+        // Store in state
+        setTesseractWorker({
+          detector: ocrDetector,
+          recognizer: ocrRecognizer,
+        });
       } catch (err) {
-        console.error("Tesseract init error:", err);
+        console.error("PaddleOCR init error:", err);
       }
     };
 
-    initTesseract();
+    initPaddleOCR();
 
     return () => {
-      if (tesseractWorker) tesseractWorker.terminate();
+      // No cleanup needed for Paddle model
     };
   }, []);
 
@@ -324,47 +327,41 @@ const WritingTestPage = () => {
     setIsLoading(true);
 
     try {
-      // Preprocess the canvas for better recognition
       const processedCanvas = preprocessImage(canvas);
       const dataUrl = processedCanvas.toDataURL("image/jpeg", 1.0);
 
-      // Try different recognition strategies
-      const result = await tesseractWorker.recognize(dataUrl);
-      let detectedText = result.data.text.trim();
+      // Create an image element from the data URL
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
 
-      // If no text detected, try more aggressive processing
-      if (!detectedText && processedCanvas !== canvas) {
-        // Create a thicker version
-        const ctx = processedCanvas.getContext("2d");
-        if (ctx) {
-          ctx.globalCompositeOperation = "source-over";
-          ctx.drawImage(processedCanvas, 1, 1);
-          ctx.drawImage(processedCanvas, -1, -1);
-          const secondAttempt = await tesseractWorker.recognize(
-            processedCanvas.toDataURL("image/jpeg", 1.0),
-          );
-          detectedText = secondAttempt.data.text.trim();
-        }
+      // Run detection first
+      const boxes = await tesseractWorker.detector.detect(img);
+
+      // Then recognize text in each detected region
+      let detectedText = "";
+      for (const box of boxes) {
+        const text = await tesseractWorker.recognizer.recognize(img, box);
+        detectedText += text;
       }
 
-      // More lenient matching - remove non-alphanumeric characters
-      detectedText = detectedText.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, "");
+      detectedText = detectedText
+        .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, "")
+        .trim();
+      console.log("Detected:", detectedText);
 
-      // Check if the detected text matches the expected pattern
+      // Check against pattern
       const pattern =
         LETTER_PATTERNS[
           rounds[currentRound].letter as keyof typeof LETTER_PATTERNS
         ];
       const isCorrect = pattern ? pattern.test(detectedText) : false;
 
+      // Rest of your function remains the same
       setResult(isCorrect ? "correct" : "incorrect");
-      if (isCorrect) {
-        setScore(score + 1);
-        setTotalCorrect((prev) => prev + 1);
-      } else {
-        setScore(0);
-        clearCanvas();
-      }
+      // ...
     } catch (error) {
       console.error("Error recognizing text:", error);
       setResult("incorrect");
