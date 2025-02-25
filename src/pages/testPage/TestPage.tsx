@@ -64,7 +64,7 @@ const TestPage = () => {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [rounds, setRounds] = useState(
-    Array(8)
+    Array(3)
       .fill(null)
       .map(() => generateRound()),
   );
@@ -232,7 +232,7 @@ const TestPage = () => {
             }}
             className="rounded-xl border-b-6 border-blue-800 bg-blue-500 px-8 py-4 font-semibold text-white transition-all duration-200 active:mt-1 active:translate-y-1 active:border-b-2"
           >
-            Jugar otra vez
+            ¡Jugar otra vez!
           </button>
         </div>
       </div>
@@ -263,7 +263,7 @@ const TestPage = () => {
 
           <div className="mb-4 h-3 w-full max-w-md overflow-hidden rounded-full bg-blue-200">
             <div
-              className="h-full rounded-full bg-blue-600 transition-all duration-300"
+              className="h-full rounded-full bg-blue-600 transition-all delay-500 duration-500"
               style={{
                 width: `${((result === "correct" ? currentRound + 1 : currentRound) / rounds.length) * 100}%`,
               }}
@@ -283,7 +283,7 @@ const TestPage = () => {
       <div className="flex w-full max-w-md flex-col justify-center rounded-2xl bg-white p-8 shadow-xl">
         <button
           onClick={playSound}
-          className="mt-6 mb-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-6 py-12 text-sky-400 transition-colors duration-200 hover:bg-blue-700"
+          className="mt-6 mb-10 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-6 py-12 text-sky-400 transition-colors duration-400 hover:bg-blue-700 active:text-blue-400"
         >
           <Volume2 size={62} />
           <span className="text-lg font-semibold">Escucha otra vez</span>
