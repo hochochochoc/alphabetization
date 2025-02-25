@@ -264,7 +264,9 @@ const TestPage = () => {
           <div className="mb-4 h-3 w-full max-w-md overflow-hidden rounded-full bg-blue-200">
             <div
               className="h-full rounded-full bg-blue-600 transition-all duration-300"
-              style={{ width: `${(currentRound / rounds.length) * 100}%` }}
+              style={{
+                width: `${((result === "correct" ? currentRound + 1 : currentRound) / rounds.length) * 100}%`,
+              }}
             >
               <div
                 className="mx-auto h-2/5 translate-y-0.5 transform rounded-full bg-blue-400/50"
