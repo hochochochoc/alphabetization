@@ -63,8 +63,10 @@ const TestPage = () => {
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
+
+  const ROUNDCOUNT = 4;
   const [rounds, setRounds] = useState(
-    Array(3)
+    Array(ROUNDCOUNT)
       .fill(null)
       .map(() => generateRound()),
   );
@@ -135,12 +137,6 @@ const TestPage = () => {
   };
 
   useEffect(() => {
-    // Initial sound play
-    const timer = setTimeout(() => playSound(), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     if (result) {
       const timer = setTimeout(() => {
         setResult(null);
@@ -158,7 +154,7 @@ const TestPage = () => {
   }, [result, currentRound, rounds.length]);
 
   useEffect(() => {
-    if (!isGameComplete && currentRound > 0) {
+    if (!isGameComplete) {
       playSound();
     }
   }, [currentRound]);
@@ -223,12 +219,14 @@ const TestPage = () => {
             onClick={() => {
               setCurrentRound(0);
               setScore(0);
+              setTotalCorrect(0);
+              setSelectedLetter(null);
               setIsGameComplete(false);
-              setRounds(
-                Array(5)
-                  .fill(null)
-                  .map(() => generateRound()),
-              );
+              setResult(null);
+              const newRounds = Array(ROUNDCOUNT)
+                .fill(null)
+                .map(() => generateRound());
+              setRounds(newRounds);
             }}
             className="rounded-xl border-b-6 border-blue-800 bg-blue-500 px-8 py-4 font-semibold text-white transition-all duration-200 active:mt-1 active:translate-y-1 active:border-b-2"
           >
