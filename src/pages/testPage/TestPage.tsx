@@ -303,7 +303,7 @@ const TestPage = () => {
         <button
           onClick={checkAnswer}
           disabled={!selectedLetter || result !== null}
-          className={`relative mt-8 w-full rounded-full border-b-6 p-4 font-semibold text-white transition-colors duration-200 ${selectedLetter && !result ? "border-blue-800 bg-blue-500 hover:bg-blue-600" : "cursor-not-allowed border-gray-400 bg-gray-300"}`}
+          className={`relative mt-8 w-full rounded-full border-b-6 p-4 font-semibold text-white transition-all duration-100 ${selectedLetter && !result ? "border-blue-800 bg-blue-500 hover:bg-blue-600 active:mt-9 active:translate-y-1 active:border-b-2" : "cursor-not-allowed border-gray-400 bg-gray-300"}`}
         >
           <svg
             className="absolute top-0 right-0 h-16 w-32"
