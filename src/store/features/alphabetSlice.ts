@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const spanishLetters = [
   { letter: "A", voice: "A" },
@@ -31,20 +31,70 @@ const spanishLetters = [
   { letter: "Z", voice: "zeta" },
 ];
 
+// Letters to be left out for now
+const writingModeLetters = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "K",
+  "L",
+  "LL",
+  "M",
+  "N",
+  "P",
+  "R",
+  "S",
+  "T",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+];
+
+// Letters to be left out for now
+const readingModeLetters = ["F", "H", "R", "W", "X", "Y", "Z"];
+
+const getFilteredLetters = (allowedLetters: string[]) => {
+  return spanishLetters.filter((item) => allowedLetters.includes(item.letter));
+};
+
 interface AlphabetState {
+  allLetters: Array<{ letter: string; voice: string }>;
   spanishLetters: Array<{ letter: string; voice: string }>;
+  writingLetters: Array<{ letter: string; voice: string }>;
+  readingLetters: Array<{ letter: string; voice: string }>;
 }
 
 const initialState: AlphabetState = {
-  spanishLetters,
+  allLetters: spanishLetters,
+  spanishLetters: spanishLetters,
+  writingLetters: getFilteredLetters(writingModeLetters),
+  readingLetters: getFilteredLetters(readingModeLetters),
 };
 
 export const alphabetSlice = createSlice({
   name: "alphabet",
   initialState,
   reducers: {
-    // Add reducers as needed
+    setWritingLetters: (state, action: PayloadAction<string[]>) => {
+      state.writingLetters = getFilteredLetters(action.payload);
+    },
+    setReadingLetters: (state, action: PayloadAction<string[]>) => {
+      state.readingLetters = getFilteredLetters(action.payload);
+    },
+    setSpanishLetters: (state, action: PayloadAction<string[]>) => {
+      state.spanishLetters = getFilteredLetters(action.payload);
+    },
   },
 });
+
+export const { setWritingLetters, setReadingLetters, setSpanishLetters } =
+  alphabetSlice.actions;
 
 export default alphabetSlice.reducer;

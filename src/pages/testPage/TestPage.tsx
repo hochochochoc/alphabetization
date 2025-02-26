@@ -39,7 +39,7 @@ const TestPage = () => {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
 
-  const ROUNDCOUNT = 4;
+  const ROUNDCOUNT = 6;
   const [rounds, setRounds] = useState(
     Array(ROUNDCOUNT)
       .fill(null)
