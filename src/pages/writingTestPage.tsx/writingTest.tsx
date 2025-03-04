@@ -1,42 +1,48 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Volume2, ArrowLeft, Eraser } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
-import "./moduleShim";
-import * as paddleOCR from "@paddlejs-models/ocr";
 import { useNavigate } from "react-router-dom";
 
-const LETTER_PATTERNS = {
-  A: /^[AaÁáÀà@4]+$/,
-  B: /^[Bb8ß]+$/,
-  C: /^[Cc¢€]+$/,
-  D: /^[Dd]+$/,
-  E: /^[EeÉéÈè3€]+$/,
-  F: /^[Ff]+$/,
-  G: /^[Gg6]+$/,
-  H: /^[Hh]+$/,
-  I: /^[IiÍíÌì1|l]+$/,
-  J: /^[Jj]+$/,
-  K: /^[Kk]+$/,
-  L: /^[Ll1|I]+$/,
-  LL: /^(LL|ll|Ll|lL)+$/,
-  M: /^[Mm]+$/,
-  N: /^[Nn]+$/,
-  Ñ: /^[Ññ]+$/,
-  O: /^[OoÓóÒò0Q]+$/,
-  P: /^[Pp]+$/,
-  Q: /^[Qq]+$/,
-  R: /^[Rr]+$/,
-  S: /^[Ss5\$]+$/,
-  T: /^[Tt7]+$/,
-  U: /^[UuÚúÙù]+$/,
-  V: /^[Vv]+$/,
-  W: /^[Ww]+$/,
-  X: /^[Xx×]+$/,
-  Y: /^[Yy]+$/,
-  Z: /^[Zz2]+$/,
-};
+// ML5 type declarations
+declare global {
+  interface Window {
+    ml5: {
+      KNNClassifier: () => KNNClassifier;
+      featureExtractor: (
+        modelName: string,
+        callback?: () => void,
+      ) => FeatureExtractor;
+    };
+  }
+}
 
-const spanishLetters = [
+interface KNNClassifier {
+  addExample: (features: any, label: string) => void;
+  classify: (
+    features: any,
+    callback: (
+      error: Error | null,
+      result?: { label: string; confidence: number },
+    ) => void,
+  ) => void;
+}
+
+interface FeatureExtractor {
+  infer: (input: HTMLCanvasElement | HTMLImageElement) => any;
+}
+
+interface ML5Classifier {
+  knn: KNNClassifier;
+  featureExtractor: FeatureExtractor;
+}
+
+interface SpanishLetter {
+  letter: string;
+  voice: string;
+}
+
+// Define Spanish letters
+const spanishLetters: SpanishLetter[] = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
   { letter: "C", voice: "ce" },
@@ -45,21 +51,19 @@ const spanishLetters = [
   { letter: "F", voice: "efe" },
   { letter: "G", voice: "ge" },
   { letter: "H", voice: "hache" },
-  // { letter: "I", voice: "I" },
-  // { letter: "J", voice: "jota" },
+  { letter: "I", voice: "i" },
+  { letter: "J", voice: "jota" },
   { letter: "K", voice: "ka" },
-  // { letter: "L", voice: "ele" },
-  { letter: "LL", voice: "eyye" },
+  { letter: "L", voice: "ele" },
   { letter: "M", voice: "eme" },
   { letter: "N", voice: "ene" },
-  // { letter: "Ñ", voice: "eñe" },
-  // { letter: "O", voice: "O" },
+  { letter: "O", voice: "o" },
   { letter: "P", voice: "pe" },
-  // { letter: "Q", voice: "cu" },
+  { letter: "Q", voice: "cu" },
   { letter: "R", voice: "erre" },
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
-  // { letter: "U", voice: "U" },
+  { letter: "U", voice: "u" },
   { letter: "V", voice: "uve" },
   { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
@@ -67,18 +71,19 @@ const spanishLetters = [
   { letter: "Z", voice: "zeta" },
 ];
 
-const WritingTestPage = () => {
+const WritingTestPage: React.FC = () => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentRound, setCurrentRound] = useState(0);
-  const [score, setScore] = useState(0);
-  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [currentRound, setCurrentRound] = useState<number>(0);
+  const [score, setScore] = useState<number>(0);
+  const [totalCorrect, setTotalCorrect] = useState<number>(0);
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
-  const [isGameComplete, setIsGameComplete] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [tesseractWorker, setTesseractWorker] = useState<any>(null);
-  const [rounds, setRounds] = useState(
+  const [isGameComplete, setIsGameComplete] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [classifier, setClassifier] = useState<ML5Classifier | null>(null);
+  const [isClassifierReady, setIsClassifierReady] = useState<boolean>(false);
+  const [rounds, setRounds] = useState<SpanishLetter[]>(
     Array(8)
       .fill(null)
       .map(
@@ -94,45 +99,81 @@ const WritingTestPage = () => {
     },
   });
 
-  // Initialize Tesseract worker
+  // Initialize ML5 classifier
   useEffect(() => {
-    // Updated initialization function
-    const initPaddleOCR = async () => {
+    const initializeClassifier = async (): Promise<void> => {
       try {
-        // Initialize PaddleOCR using the available API
-        const ocrDetector = new paddleOCR.Detector({
-          modelPath: "https://paddlejs.bj.bcebos.com/models/det_db/model",
-          scale: 1,
-        });
+        // Check if ml5 is available in window
+        if (!window.ml5) {
+          console.error("ml5 is not available. Make sure to include the CDN.");
+          return;
+        }
 
-        const ocrRecognizer = new paddleOCR.Recognizer({
-          modelPath: "https://paddlejs.bj.bcebos.com/models/rec_crnn/model",
-          vocabulary:
-            "https://paddlejs.bj.bcebos.com/models/rec_crnn/vocab.json",
-        });
+        // Create a KNN classifier
+        const knnClassifier = window.ml5.KNNClassifier();
 
-        // Load both models
-        await ocrDetector.load();
-        await ocrRecognizer.load();
+        // Create a feature extractor using MobileNet
+        const featureExtractor = window.ml5.featureExtractor(
+          "MobileNet",
+          () => {
+            console.log("Feature extractor loaded");
 
-        // Store in state
-        setTesseractWorker({
-          detector: ocrDetector,
-          recognizer: ocrRecognizer,
+            // Load example images and add them to classifier
+            loadExampleImages(featureExtractor, knnClassifier);
+          },
+        );
+
+        setClassifier({
+          knn: knnClassifier,
+          featureExtractor: featureExtractor,
         });
-      } catch (err) {
-        console.error("PaddleOCR init error:", err);
+      } catch (error) {
+        console.error("Error initializing ML5 classifier:", error);
       }
     };
 
-    initPaddleOCR();
-
-    return () => {
-      // No cleanup needed for Paddle model
-    };
+    initializeClassifier();
   }, []);
 
-  const playSound = async () => {
+  // Load example images for each letter
+  const loadExampleImages = async (
+    featureExtractor: FeatureExtractor,
+    knnClassifier: KNNClassifier,
+  ): Promise<void> => {
+    console.log("Loading example images...");
+
+    try {
+      // This would be replaced with actual image loading from your example set
+      // For each letter we would load multiple examples
+
+      // Example structure (pseudocode):
+      for (const letter of spanishLetters) {
+        // For each letter, we would have multiple example images
+        // e.g. A1.png, A2.png, A3.png for letter A
+
+        // Assuming you have example images stored in a folder structure like:
+        // /examples/A/1.png, /examples/A/2.png, etc.
+
+        for (let i = 1; i <= 3; i++) {
+          // Path would be something like `/examples/${letter.letter}/${i}.png`
+          // For now, we'll just log it as this will be implemented when examples exist
+          console.log(`Would load example for ${letter.letter}, example #${i}`);
+
+          // Example of how you would add each image to the classifier:
+          // const img = await loadImage(`/examples/${letter.letter}/${i}.png`);
+          // const features = featureExtractor.infer(img);
+          // knnClassifier.addExample(features, letter.letter);
+        }
+      }
+
+      console.log("Example images loaded successfully");
+      setIsClassifierReady(true);
+    } catch (error) {
+      console.error("Error loading example images:", error);
+    }
+  };
+
+  const playSound = async (): Promise<void> => {
     if (isGameComplete) return;
 
     const command = new SynthesizeSpeechCommand({
@@ -183,7 +224,7 @@ const WritingTestPage = () => {
     }
   }, [result, currentRound, rounds.length]);
 
-  const initCanvas = () => {
+  const initCanvas = (): void => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -214,14 +255,14 @@ const WritingTestPage = () => {
     };
   }, []);
 
-  const clearCanvas = () => {
+  const clearCanvas = (): void => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
+  const startDrawing = (e: React.TouchEvent | React.MouseEvent): void => {
     setIsDrawing(true);
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -243,7 +284,7 @@ const WritingTestPage = () => {
     ctx.moveTo(x, y);
   };
 
-  const draw = (e: React.TouchEvent | React.MouseEvent) => {
+  const draw = (e: React.TouchEvent | React.MouseEvent): void => {
     if (!isDrawing) return;
 
     const canvas = canvasRef.current;
@@ -266,111 +307,75 @@ const WritingTestPage = () => {
     ctx.stroke();
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (): void => {
     setIsDrawing(false);
   };
 
-  const preprocessImage = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return canvas;
-
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) return canvas;
-
-    // White background
-    tempCtx.fillStyle = "white";
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-    tempCtx.drawImage(canvas, 0, 0);
-
-    // Much more dramatic thickening and contrast
-    tempCtx.globalAlpha = 1.0;
-    tempCtx.drawImage(tempCanvas, 0, 0);
-    tempCtx.drawImage(tempCanvas, 1, 0);
-    tempCtx.drawImage(tempCanvas, 0, 1);
-    tempCtx.drawImage(tempCanvas, -1, 0);
-    tempCtx.drawImage(tempCanvas, 0, -1);
-
-    // Max contrast
-    const imageData = tempCtx.getImageData(
-      0,
-      0,
-      tempCanvas.width,
-      tempCanvas.height,
-    );
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      // Very aggressive threshold
-      if (data[i] < 230 || data[i + 1] < 230 || data[i + 2] < 230) {
-        data[i] = 0;
-        data[i + 1] = 0;
-        data[i + 2] = 0;
-        data[i + 3] = 255;
-      } else {
-        data[i] = 255;
-        data[i + 1] = 255;
-        data[i + 2] = 255;
-        data[i + 3] = 255;
-      }
+  const checkDrawing = async (): Promise<void> => {
+    if (!classifier || !isClassifierReady) {
+      console.error("Classifier not ready");
+      return;
     }
-    tempCtx.putImageData(imageData, 0, 0);
-
-    return tempCanvas;
-  };
-
-  const checkDrawing = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !tesseractWorker) return;
 
     setIsLoading(true);
 
     try {
-      const processedCanvas = preprocessImage(canvas);
-      const dataUrl = processedCanvas.toDataURL("image/jpeg", 1.0);
-
-      // Create an image element from the data URL
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise((resolve) => {
-        img.onload = resolve;
-      });
-
-      // Run detection first
-      const boxes = await tesseractWorker.detector.detect(img);
-
-      // Then recognize text in each detected region
-      let detectedText = "";
-      for (const box of boxes) {
-        const text = await tesseractWorker.recognizer.recognize(img, box);
-        detectedText += text;
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        throw new Error("Canvas not found");
       }
 
-      detectedText = detectedText
-        .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, "")
-        .trim();
-      console.log("Detected:", detectedText);
+      // Extract features from the current drawing
+      const features = classifier.featureExtractor.infer(canvas);
 
-      // Check against pattern
-      const pattern =
-        LETTER_PATTERNS[
-          rounds[currentRound].letter as keyof typeof LETTER_PATTERNS
-        ];
-      const isCorrect = pattern ? pattern.test(detectedText) : false;
+      // Get the classification from KNN classifier
+      classifier.knn.classify(features, (error, result) => {
+        if (error) {
+          console.error("Error classifying drawing:", error);
+          setResult("incorrect");
+          setIsLoading(false);
+          return;
+        }
 
-      // Rest of your function remains the same
-      setResult(isCorrect ? "correct" : "incorrect");
-      // ...
+        if (!result) {
+          console.error("No classification result");
+          setResult("incorrect");
+          setIsLoading(false);
+          return;
+        }
+
+        // The result will contain label (letter) and confidence
+        console.log("Classification result:", result);
+
+        // Get the predicted letter and confidence
+        const predictedLetter = result.label;
+        const confidence = result.confidence;
+
+        // Check if it matches the target letter (simplified logic for now)
+        const targetLetter = rounds[currentRound].letter;
+
+        // We could set a confidence threshold, but for now we'll just check for exact match
+        const isCorrect = predictedLetter === targetLetter;
+
+        setResult(isCorrect ? "correct" : "incorrect");
+
+        if (isCorrect) {
+          setScore((prev) => prev + 1);
+          setTotalCorrect((prev) => prev + 1);
+        } else {
+          setScore(0);
+        }
+
+        setIsLoading(false);
+      });
     } catch (error) {
-      console.error("Error recognizing text:", error);
+      console.error("Error recognizing drawing:", error);
       setResult("incorrect");
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const getBgColor = () => {
+  const getBgColor = (): string => {
     if (result === "correct") return "bg-green-100";
     if (result === "incorrect") return "bg-red-100";
     return "bg-gradient-to-br from-blue-100 to-white";
@@ -401,16 +406,7 @@ const WritingTestPage = () => {
                       ],
                   ),
               );
-              setTimeout(() => {
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-                const ctx = canvas.getContext("2d");
-                if (!ctx) return;
-                ctx.strokeStyle = "#2563eb";
-                ctx.lineWidth = 6;
-                ctx.lineCap = "round";
-                ctx.lineJoin = "round";
-              }, 0);
+              setTimeout(() => clearCanvas(), 0);
             }}
             className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white hover:bg-blue-600"
           >
@@ -474,10 +470,10 @@ const WritingTestPage = () => {
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
             onTouchStart={(e: React.TouchEvent) => {
-              startDrawing(e as unknown as React.TouchEvent | React.MouseEvent);
+              startDrawing(e);
             }}
             onTouchMove={(e: React.TouchEvent) => {
-              draw(e as unknown as React.TouchEvent | React.MouseEvent);
+              draw(e);
             }}
             onTouchEnd={stopDrawing}
           />
@@ -491,9 +487,9 @@ const WritingTestPage = () => {
 
         <button
           onClick={checkDrawing}
-          disabled={isLoading}
+          disabled={isLoading || !isClassifierReady}
           className={`relative w-full rounded-full border-b-6 p-4 font-semibold text-white transition-colors duration-200 ${
-            isLoading
+            isLoading || !isClassifierReady
               ? "cursor-not-allowed border-gray-400 bg-gray-300"
               : "border-blue-800 bg-blue-500 hover:bg-blue-600"
           }`}
@@ -526,7 +522,9 @@ const WritingTestPage = () => {
               opacity="0.3"
             />
           </svg>
-          <span>Comprobar</span>
+          <span>
+            {!isClassifierReady ? "Cargando ejemplos..." : "Comprobar"}
+          </span>
         </button>
       </div>
     </div>
