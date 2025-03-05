@@ -137,8 +137,8 @@ const WritingTestPage: React.FC = () => {
 
   // Load example images for each letter
   const loadExampleImages = async (
-    featureExtractor: FeatureExtractor,
-    knnClassifier: KNNClassifier,
+    _featureExtractor: FeatureExtractor,
+    _knnClassifier: KNNClassifier,
   ): Promise<void> => {
     console.log("Loading example images...");
 
@@ -350,6 +350,7 @@ const WritingTestPage: React.FC = () => {
         // Get the predicted letter and confidence
         const predictedLetter = result.label;
         const confidence = result.confidence;
+        console.log(`Predicted confidence: ${confidence}`);
 
         // Check if it matches the target letter (simplified logic for now)
         const targetLetter = rounds[currentRound].letter;
