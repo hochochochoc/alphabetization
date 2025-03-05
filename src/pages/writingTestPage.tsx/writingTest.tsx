@@ -6,13 +6,7 @@ import { useNavigate } from "react-router-dom";
 // ML5 type declarations
 declare global {
   interface Window {
-    ml5: {
-      KNNClassifier: () => KNNClassifier;
-      featureExtractor: (
-        modelName: string,
-        callback?: () => void,
-      ) => FeatureExtractor;
-    };
+    ml5: any;
   }
 }
 
@@ -25,6 +19,7 @@ interface KNNClassifier {
       result?: { label: string; confidence: number },
     ) => void,
   ) => void;
+  getCount: () => { [key: string]: number };
 }
 
 interface FeatureExtractor {
@@ -83,6 +78,7 @@ const WritingTestPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [classifier, setClassifier] = useState<ML5Classifier | null>(null);
   const [isClassifierReady, setIsClassifierReady] = useState<boolean>(false);
+  const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
   const [rounds, setRounds] = useState<SpanishLetter[]>(
     Array(8)
       .fill(null)
@@ -137,39 +133,67 @@ const WritingTestPage: React.FC = () => {
 
   // Load example images for each letter
   const loadExampleImages = async (
-    _featureExtractor: FeatureExtractor,
-    _knnClassifier: KNNClassifier,
+    featureExtractor: FeatureExtractor,
+    knnClassifier: KNNClassifier,
   ): Promise<void> => {
     console.log("Loading example images...");
 
     try {
-      // This would be replaced with actual image loading from your example set
-      // For each letter we would load multiple examples
+      // Define the sample images we want to load
+      const sampleImages = [
+        { path: "/A1.jpg", letter: "A" },
+        { path: "/A2.jpg", letter: "A" },
+        { path: "/A3.jpg", letter: "A" },
+        // Add more sample paths as you add more images
+      ];
 
-      // Example structure (pseudocode):
-      for (const letter of spanishLetters) {
-        // For each letter, we would have multiple example images
-        // e.g. A1.png, A2.png, A3.png for letter A
+      let loadedCount = 0;
+      const totalImages = sampleImages.length;
 
-        // Assuming you have example images stored in a folder structure like:
-        // /examples/A/1.png, /examples/A/2.png, etc.
+      // Function to load an image and add it to the classifier
+      const loadImageForClassifier = (
+        imagePath: string,
+        letterLabel: string,
+      ) => {
+        return new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            try {
+              // Extract features from the image
+              const features = featureExtractor.infer(img);
+              // Add the features to the classifier with the letter as the label
+              knnClassifier.addExample(features, letterLabel);
+              loadedCount++;
+              console.log(
+                `Loaded ${loadedCount}/${totalImages}: ${imagePath} as ${letterLabel}`,
+              );
+              resolve();
+            } catch (err) {
+              console.error(`Error processing image ${imagePath}:`, err);
+              reject(err);
+            }
+          };
+          img.onerror = (err) => {
+            console.error(`Failed to load image ${imagePath}:`, err);
+            reject(new Error(`Failed to load image ${imagePath}`));
+          };
+          img.src = imagePath;
+        });
+      };
 
-        for (let i = 1; i <= 3; i++) {
-          // Path would be something like `/examples/${letter.letter}/${i}.png`
-          // For now, we'll just log it as this will be implemented when examples exist
-          console.log(`Would load example for ${letter.letter}, example #${i}`);
-
-          // Example of how you would add each image to the classifier:
-          // const img = await loadImage(`/examples/${letter.letter}/${i}.png`);
-          // const features = featureExtractor.infer(img);
-          // knnClassifier.addExample(features, letter.letter);
-        }
+      // Load all sample images
+      for (const sample of sampleImages) {
+        await loadImageForClassifier(sample.path, sample.letter);
       }
 
-      console.log("Example images loaded successfully");
+      console.log("All example images loaded successfully");
+      console.log("Example counts:", knnClassifier.getCount());
+      setExamplesLoaded(true);
       setIsClassifierReady(true);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error loading example images:", error);
+      setIsLoading(false);
     }
   };
 
@@ -312,8 +336,8 @@ const WritingTestPage: React.FC = () => {
   };
 
   const checkDrawing = async (): Promise<void> => {
-    if (!classifier || !isClassifierReady) {
-      console.error("Classifier not ready");
+    if (!classifier || !isClassifierReady || !examplesLoaded) {
+      console.error("Classifier not ready or examples not loaded");
       return;
     }
 
