@@ -10,14 +10,20 @@ declare global {
   }
 }
 
+interface KNNClassifierResult {
+  label: string;
+  confidence: number;
+  // Optional fields that may exist in newer ml5 versions
+  confidences?: { [key: string]: number };
+  confidencesByLabel?: { [key: string]: number };
+  classIndex?: number;
+}
+
 interface KNNClassifier {
   addExample: (features: any, label: string) => void;
   classify: (
     features: any,
-    callback: (
-      error: Error | null,
-      result?: { label: string; confidence: number },
-    ) => void,
+    callback: (error: Error | null, result?: KNNClassifierResult) => void,
   ) => void;
   getCount: () => { [key: string]: number };
 }
@@ -40,30 +46,30 @@ interface SpanishLetter {
 const spanishLetters: SpanishLetter[] = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
-  { letter: "C", voice: "ce" },
-  { letter: "D", voice: "de" },
-  { letter: "E", voice: "E" },
-  { letter: "F", voice: "efe" },
-  { letter: "G", voice: "ge" },
-  { letter: "H", voice: "hache" },
-  { letter: "I", voice: "i" },
-  { letter: "J", voice: "jota" },
-  { letter: "K", voice: "ka" },
-  { letter: "L", voice: "ele" },
-  { letter: "M", voice: "eme" },
-  { letter: "N", voice: "ene" },
-  { letter: "O", voice: "o" },
-  { letter: "P", voice: "pe" },
-  { letter: "Q", voice: "cu" },
-  { letter: "R", voice: "erre" },
-  { letter: "S", voice: "ese" },
-  { letter: "T", voice: "te" },
-  { letter: "U", voice: "u" },
-  { letter: "V", voice: "uve" },
-  { letter: "W", voice: "uve doble" },
-  { letter: "X", voice: "equis" },
-  { letter: "Y", voice: "i griega" },
-  { letter: "Z", voice: "zeta" },
+  // { letter: "C", voice: "ce" },
+  // { letter: "D", voice: "de" },
+  // { letter: "E", voice: "E" },
+  // { letter: "F", voice: "efe" },
+  // { letter: "G", voice: "ge" },
+  // { letter: "H", voice: "hache" },
+  // { letter: "I", voice: "i" },
+  // { letter: "J", voice: "jota" },
+  // { letter: "K", voice: "ka" },
+  // { letter: "L", voice: "ele" },
+  // { letter: "M", voice: "eme" },
+  // { letter: "N", voice: "ene" },
+  // { letter: "O", voice: "o" },
+  // { letter: "P", voice: "pe" },
+  // { letter: "Q", voice: "cu" },
+  // { letter: "R", voice: "erre" },
+  // { letter: "S", voice: "ese" },
+  // { letter: "T", voice: "te" },
+  // { letter: "U", voice: "u" },
+  // { letter: "V", voice: "uve" },
+  // { letter: "W", voice: "uve doble" },
+  // { letter: "X", voice: "equis" },
+  // { letter: "Y", voice: "i griega" },
+  // { letter: "Z", voice: "zeta" },
 ];
 
 const WritingTestPage: React.FC = () => {
@@ -144,7 +150,10 @@ const WritingTestPage: React.FC = () => {
         { path: "/A1.jpg", letter: "A" },
         { path: "/A2.jpg", letter: "A" },
         { path: "/A3.jpg", letter: "A" },
-        // Add more sample paths as you add more images
+        { path: "/B1.jpg", letter: "B" },
+        { path: "/B2.jpg", letter: "B" },
+        { path: "/B3.jpg", letter: "B" },
+        // { path: "/B4.jpg", letter: "B" },
       ];
 
       let loadedCount = 0;
@@ -260,8 +269,8 @@ const WritingTestPage: React.FC = () => {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    ctx.strokeStyle = "#2563eb";
-    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
   };
@@ -336,65 +345,126 @@ const WritingTestPage: React.FC = () => {
   };
 
   const checkDrawing = async (): Promise<void> => {
-    if (!classifier || !isClassifierReady || !examplesLoaded) {
-      console.error("Classifier not ready or examples not loaded");
-      return;
-    }
-
+    if (!classifier || !isClassifierReady || !examplesLoaded) return;
     setIsLoading(true);
 
     try {
       const canvas = canvasRef.current;
-      if (!canvas) {
-        throw new Error("Canvas not found");
+      if (!canvas) throw new Error("Canvas not found");
+
+      // Normalize drawing to match training examples
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = 224; // MobileNet input size
+      tempCanvas.height = 224;
+      const tempCtx = tempCanvas.getContext("2d");
+      if (!tempCtx) throw new Error("Could not create temp canvas context");
+
+      // Fill white background
+      tempCtx.fillStyle = "white";
+      tempCtx.fillRect(0, 0, 224, 224);
+
+      // Center and scale the drawing
+      const originalCtx = canvas.getContext("2d");
+      if (!originalCtx) throw new Error("Could not get canvas context");
+
+      const pixels = originalCtx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+
+      // Find drawing boundaries
+      let minX = canvas.width,
+        maxX = 0,
+        minY = canvas.height,
+        maxY = 0;
+      let hasDrawing = false;
+
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const i = (y * canvas.width + x) * 4;
+          if (pixels.data[i + 3] > 0 && pixels.data[i] < 250) {
+            // Alpha > 0 and not white
+            hasDrawing = true;
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          }
+        }
       }
 
-      // Extract features from the current drawing
-      const features = classifier.featureExtractor.infer(canvas);
-
-      // Get the classification from KNN classifier
-      classifier.knn.classify(features, (error, result) => {
-        if (error) {
-          console.error("Error classifying drawing:", error);
-          setResult("incorrect");
-          setIsLoading(false);
-          return;
-        }
-
-        if (!result) {
-          console.error("No classification result");
-          setResult("incorrect");
-          setIsLoading(false);
-          return;
-        }
-
-        // The result will contain label (letter) and confidence
-        console.log("Classification result:", result);
-
-        // Get the predicted letter and confidence
-        const predictedLetter = result.label;
-        const confidence = result.confidence;
-        console.log(`Predicted confidence: ${confidence}`);
-
-        // Check if it matches the target letter (simplified logic for now)
-        const targetLetter = rounds[currentRound].letter;
-
-        // We could set a confidence threshold, but for now we'll just check for exact match
-        const isCorrect = predictedLetter === targetLetter;
-
-        setResult(isCorrect ? "correct" : "incorrect");
-
-        if (isCorrect) {
-          setScore((prev) => prev + 1);
-          setTotalCorrect((prev) => prev + 1);
-        } else {
-          setScore(0);
-        }
-
+      if (!hasDrawing) {
+        console.log("No drawing detected");
+        setResult("incorrect");
         setIsLoading(false);
-      });
+        return;
+      }
+
+      // Add padding
+      const padding = 20;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(canvas.width, maxX + padding);
+      maxY = Math.min(canvas.height, maxY + padding);
+
+      // Center the drawing
+      const drawingWidth = maxX - minX;
+      const drawingHeight = maxY - minY;
+      const size = Math.max(drawingWidth, drawingHeight);
+      const scale = Math.min(180 / size, 1); // Leave room for 224×224
+      const centerX = 112 - (drawingWidth / 2) * scale;
+      const centerY = 112 - (drawingHeight / 2) * scale;
+
+      // Draw with thicker lines
+      tempCtx.drawImage(
+        canvas,
+        minX,
+        minY,
+        drawingWidth,
+        drawingHeight,
+        centerX,
+        centerY,
+        drawingWidth * scale,
+        drawingHeight * scale,
+      );
+
+      // Classify the normalized image
+      const dataURL = tempCanvas.toDataURL("image/jpeg", 1.0);
+      const img = new Image();
+      img.onload = () => {
+        const features = classifier.featureExtractor.infer(img);
+        classifier.knn.classify(
+          features,
+          (error: Error | null, result?: KNNClassifierResult) => {
+            if (error || !result) {
+              setResult("incorrect");
+              setIsLoading(false);
+              return;
+            }
+
+            console.log("Raw result:", JSON.stringify(result));
+            const targetLetter = rounds[currentRound].letter;
+            const confidences = result.confidencesByLabel || {};
+            const targetConfidence = confidences[targetLetter] || 0;
+
+            const isCorrect = targetConfidence > 0.4;
+
+            setResult(isCorrect ? "correct" : "incorrect");
+            if (isCorrect) {
+              setScore((prev) => prev + 1);
+              setTotalCorrect((prev) => prev + 1);
+            } else {
+              setScore(0);
+            }
+            setIsLoading(false);
+          },
+        );
+      };
+      img.src = dataURL;
     } catch (error) {
-      console.error("Error recognizing drawing:", error);
+      console.error("Error:", error);
       setResult("incorrect");
       setIsLoading(false);
     }

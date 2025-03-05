@@ -207,6 +207,23 @@ const TestPage = () => {
           >
             ¡Jugar otra vez!
           </button>
+          <button
+            onClick={() => {
+              setCurrentRound(0);
+              setScore(0);
+              setTotalCorrect(0);
+              setSelectedLetter(null);
+              setIsGameComplete(false);
+              setResult(null);
+              const newRounds = Array(ROUNDCOUNT)
+                .fill(null)
+                .map(() => generateRound(spanishLetters));
+              setRounds(newRounds);
+            }}
+            className="rounded-xl border-b-6 border-blue-800 bg-blue-500 px-8 py-4 font-semibold text-white transition-all duration-200 active:mt-1 active:translate-y-1 active:border-b-2"
+          >
+            Volver al menu
+          </button>
         </div>
       </div>
     );
