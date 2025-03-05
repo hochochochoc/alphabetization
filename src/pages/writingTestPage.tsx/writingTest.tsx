@@ -153,7 +153,12 @@ const WritingTestPage: React.FC = () => {
         { path: "/B1.jpg", letter: "B" },
         { path: "/B2.jpg", letter: "B" },
         { path: "/B3.jpg", letter: "B" },
-        // { path: "/B4.jpg", letter: "B" },
+        { path: "/C1.jpg", letter: "C" },
+        { path: "/C2.jpg", letter: "C" },
+        { path: "/C3.jpg", letter: "C" },
+        { path: "/X1.jpg", letter: "X" },
+        { path: "/X2.jpg", letter: "X" },
+        { path: "/X3.jpg", letter: "X" },
       ];
 
       let loadedCount = 0;
