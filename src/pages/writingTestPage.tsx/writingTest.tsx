@@ -48,8 +48,8 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "B", voice: "be" },
   { letter: "C", voice: "ce" },
   // { letter: "D", voice: "de" },
-  // { letter: "E", voice: "E" },
-  // { letter: "F", voice: "efe" },
+  { letter: "E", voice: "E" },
+  { letter: "F", voice: "efe" },
   // { letter: "G", voice: "ge" },
   // { letter: "H", voice: "hache" },
   // { letter: "I", voice: "i" },
@@ -147,32 +147,78 @@ const WritingTestPage: React.FC = () => {
     try {
       // Define the sample images we want to load
       const sampleImages = [
+        // A
         { path: "/A1.jpg", letter: "A" },
         { path: "/A2.jpg", letter: "A" },
         { path: "/A3.jpg", letter: "A" },
+        // B
         { path: "/B1.jpg", letter: "B" },
         { path: "/B2.jpg", letter: "B" },
         { path: "/B3.jpg", letter: "B" },
         { path: "/B4.jpg", letter: "B" },
         { path: "/B5.jpg", letter: "B" },
+        { path: "/B6.jpg", letter: "B" },
+        { path: "/B7.jpg", letter: "B" },
+        { path: "/B8.jpg", letter: "B" },
+        // C
         { path: "/C1.jpg", letter: "C" },
         { path: "/C2.jpg", letter: "C" },
         { path: "/C3.jpg", letter: "C" },
         { path: "/C4.jpg", letter: "C" },
         { path: "/C5.jpg", letter: "C" },
-        { path: "/X1.jpg", letter: "X" },
-        { path: "/X2.jpg", letter: "X" },
-        { path: "/X3.jpg", letter: "X" },
+        // D
+        // E
+        { path: "/E1.jpg", letter: "E" },
+        { path: "/E2.jpg", letter: "E" },
+        { path: "/E3.jpg", letter: "E" },
+        { path: "/E4.jpg", letter: "E" },
+        { path: "/E5.jpg", letter: "E" },
+        { path: "/E6.jpg", letter: "E" },
+        // F
+        { path: "/F1.jpg", letter: "F" },
+        { path: "/F2.jpg", letter: "F" },
+        { path: "/F3.jpg", letter: "F" },
+        { path: "/F4.jpg", letter: "F" },
+        { path: "/F5.jpg", letter: "F" },
+        { path: "/F6.jpg", letter: "F" },
+        // G
+        // H
+        // I
+        // J
+        // K
+        // L
+        // M
+        // N
+        // Ñ
+        // O
         { path: "/O1.jpg", letter: "O" },
         { path: "/O2.jpg", letter: "O" },
         { path: "/O3.jpg", letter: "O" },
         { path: "/O4.jpg", letter: "O" },
         { path: "/O5.jpg", letter: "O" },
+        // P
+        // Q
         { path: "/Q1.jpg", letter: "Q" },
         { path: "/Q2.jpg", letter: "Q" },
         { path: "/Q3.jpg", letter: "Q" },
         { path: "/Q4.jpg", letter: "Q" },
         { path: "/Q5.jpg", letter: "Q" },
+        { path: "/Q6.jpg", letter: "Q" },
+        { path: "/Q7.jpg", letter: "Q" },
+        { path: "/Q8.jpg", letter: "Q" },
+        { path: "/Q9.jpg", letter: "Q" },
+        // R
+        // S
+        // T
+        // U
+        // V
+        // W
+        // X
+        { path: "/X1.jpg", letter: "X" },
+        { path: "/X2.jpg", letter: "X" },
+        { path: "/X3.jpg", letter: "X" },
+        // Y
+        // Z
       ];
 
       let loadedCount = 0;
