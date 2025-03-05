@@ -523,7 +523,10 @@ const WritingTestPage: React.FC = () => {
                       ],
                   ),
               );
-              setTimeout(() => clearCanvas(), 0);
+              setTimeout(() => {
+                clearCanvas();
+                initCanvas();
+              }, 0);
             }}
             className="rounded-xl border-b-6 border-blue-800 bg-blue-500 px-8 py-4 font-semibold text-white transition-all duration-200 active:mt-1 active:translate-y-1 active:border-b-2"
           >
