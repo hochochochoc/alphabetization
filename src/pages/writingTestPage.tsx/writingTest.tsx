@@ -46,7 +46,7 @@ interface SpanishLetter {
 const spanishLetters: SpanishLetter[] = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
-  // { letter: "C", voice: "ce" },
+  { letter: "C", voice: "ce" },
   // { letter: "D", voice: "de" },
   // { letter: "E", voice: "E" },
   // { letter: "F", voice: "efe" },
@@ -67,7 +67,7 @@ const spanishLetters: SpanishLetter[] = [
   // { letter: "U", voice: "u" },
   // { letter: "V", voice: "uve" },
   // { letter: "W", voice: "uve doble" },
-  // { letter: "X", voice: "equis" },
+  { letter: "X", voice: "equis" },
   // { letter: "Y", voice: "i griega" },
   // { letter: "Z", voice: "zeta" },
 ];
@@ -251,6 +251,9 @@ const WritingTestPage: React.FC = () => {
             setCurrentRound((prev) => prev + 1);
             clearCanvas();
           }
+        } else {
+          clearCanvas();
+          playSound();
         }
       }, 1000);
       return () => clearTimeout(timer);
