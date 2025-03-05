@@ -103,7 +103,7 @@ const WritingInputPage: React.FC = () => {
 
     // Create a link element to trigger download
     const link = document.createElement("a");
-    link.download = `${letter}_example.jpg`;
+    link.download = `${letter}.jpg`;
     link.href = canvas.toDataURL("image/jpeg", 0.9);
     link.click();
   };

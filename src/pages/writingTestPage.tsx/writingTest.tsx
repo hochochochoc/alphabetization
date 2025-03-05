@@ -58,9 +58,9 @@ const spanishLetters: SpanishLetter[] = [
   // { letter: "L", voice: "ele" },
   // { letter: "M", voice: "eme" },
   // { letter: "N", voice: "ene" },
-  // { letter: "O", voice: "o" },
+  { letter: "O", voice: "o" },
   // { letter: "P", voice: "pe" },
-  // { letter: "Q", voice: "cu" },
+  { letter: "Q", voice: "cu" },
   // { letter: "R", voice: "erre" },
   // { letter: "S", voice: "ese" },
   // { letter: "T", voice: "te" },
@@ -153,12 +153,26 @@ const WritingTestPage: React.FC = () => {
         { path: "/B1.jpg", letter: "B" },
         { path: "/B2.jpg", letter: "B" },
         { path: "/B3.jpg", letter: "B" },
+        { path: "/B4.jpg", letter: "B" },
+        { path: "/B5.jpg", letter: "B" },
         { path: "/C1.jpg", letter: "C" },
         { path: "/C2.jpg", letter: "C" },
         { path: "/C3.jpg", letter: "C" },
+        { path: "/C4.jpg", letter: "C" },
+        { path: "/C5.jpg", letter: "C" },
         { path: "/X1.jpg", letter: "X" },
         { path: "/X2.jpg", letter: "X" },
         { path: "/X3.jpg", letter: "X" },
+        { path: "/O1.jpg", letter: "O" },
+        { path: "/O2.jpg", letter: "O" },
+        { path: "/O3.jpg", letter: "O" },
+        { path: "/O4.jpg", letter: "O" },
+        { path: "/O5.jpg", letter: "O" },
+        { path: "/Q1.jpg", letter: "Q" },
+        { path: "/Q2.jpg", letter: "Q" },
+        { path: "/Q3.jpg", letter: "Q" },
+        { path: "/Q4.jpg", letter: "Q" },
+        { path: "/Q5.jpg", letter: "Q" },
       ];
 
       let loadedCount = 0;
@@ -511,7 +525,7 @@ const WritingTestPage: React.FC = () => {
               );
               setTimeout(() => clearCanvas(), 0);
             }}
-            className="rounded-xl bg-blue-500 px-8 py-4 font-semibold text-white hover:bg-blue-600"
+            className="rounded-xl border-b-6 border-blue-800 bg-blue-500 px-8 py-4 font-semibold text-white transition-all duration-200 active:mt-1 active:translate-y-1 active:border-b-2"
           >
             Jugar otra vez
           </button>
