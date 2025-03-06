@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Volume2, ArrowLeft, Eraser } from "lucide-react";
+import { Volume2, ArrowLeft, Eraser, Download } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 import { useNavigate } from "react-router-dom";
 
@@ -51,13 +51,15 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "E", voice: "E" },
   { letter: "F", voice: "efe" },
   // { letter: "G", voice: "ge" },
-  // { letter: "H", voice: "hache" },
+  { letter: "H", voice: "hache" },
   { letter: "I", voice: "i" },
   // { letter: "J", voice: "jota" },
   { letter: "K", voice: "ka" },
   { letter: "L", voice: "ele" },
+  { letter: "LL", voice: "eyye" },
   { letter: "M", voice: "eme" },
-  // { letter: "N", voice: "ene" },
+  { letter: "N", voice: "ene" },
+  { letter: "Ñ", voice: "eñe" },
   { letter: "O", voice: "o" },
   // { letter: "P", voice: "pe" },
   { letter: "Q", voice: "cu" },
@@ -65,8 +67,8 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
   // { letter: "U", voice: "u" },
-  // { letter: "V", voice: "uve" },
-  // { letter: "W", voice: "uve doble" },
+  { letter: "V", voice: "uve" },
+  { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
   { letter: "Y", voice: "i griega" },
   { letter: "Z", voice: "zeta" },
@@ -151,6 +153,9 @@ const WritingTestPage: React.FC = () => {
         { path: "/A1.jpg", letter: "A" },
         { path: "/A2.jpg", letter: "A" },
         { path: "/A3.jpg", letter: "A" },
+        { path: "/A4.jpg", letter: "A" },
+        { path: "/A5.jpg", letter: "A" },
+        { path: "/A6.jpg", letter: "A" },
         // B
         { path: "/B1.jpg", letter: "B" },
         { path: "/B2.jpg", letter: "B" },
@@ -160,12 +165,16 @@ const WritingTestPage: React.FC = () => {
         { path: "/B6.jpg", letter: "B" },
         { path: "/B7.jpg", letter: "B" },
         { path: "/B8.jpg", letter: "B" },
+        { path: "/B9.jpg", letter: "B" },
         // C
         { path: "/C1.jpg", letter: "C" },
         { path: "/C2.jpg", letter: "C" },
         { path: "/C3.jpg", letter: "C" },
         { path: "/C4.jpg", letter: "C" },
         { path: "/C5.jpg", letter: "C" },
+        { path: "/C6.jpg", letter: "C" },
+        { path: "/C7.jpg", letter: "C" },
+        { path: "/C8.jpg", letter: "C" },
         // D
         // E
         { path: "/E1.jpg", letter: "E" },
@@ -174,6 +183,10 @@ const WritingTestPage: React.FC = () => {
         { path: "/E4.jpg", letter: "E" },
         { path: "/E5.jpg", letter: "E" },
         { path: "/E6.jpg", letter: "E" },
+        { path: "/E7.jpg", letter: "E" },
+        { path: "/E8.jpg", letter: "E" },
+        { path: "/E9.jpg", letter: "E" },
+        { path: "/E10.jpg", letter: "E" },
         // F
         { path: "/F1.jpg", letter: "F" },
         { path: "/F2.jpg", letter: "F" },
@@ -181,12 +194,28 @@ const WritingTestPage: React.FC = () => {
         { path: "/F4.jpg", letter: "F" },
         { path: "/F5.jpg", letter: "F" },
         { path: "/F6.jpg", letter: "F" },
+        { path: "/F7.jpg", letter: "F" },
+        { path: "/F8.jpg", letter: "F" },
+        { path: "/F9.jpg", letter: "F" },
+        { path: "/F10.jpg", letter: "F" },
+        { path: "/F11.jpg", letter: "F" },
+        { path: "/F12.jpg", letter: "F" },
+        { path: "/F13.jpg", letter: "F" },
+        { path: "/F14.jpg", letter: "F" },
+        // { path: "/F15.jpg", letter: "F" },
         // G
         // H
+        { path: "/H1.jpg", letter: "H" },
+        { path: "/H2.jpg", letter: "H" },
+        { path: "/H3.jpg", letter: "H" },
         // I
         { path: "/I1.jpg", letter: "I" },
         { path: "/I2.jpg", letter: "I" },
         { path: "/I3.jpg", letter: "I" },
+        { path: "/I4.jpg", letter: "I" },
+        { path: "/I5.jpg", letter: "I" },
+        { path: "/I6.jpg", letter: "I" },
+        { path: "/I8.jpg", letter: "I" },
         // J
         // { path: "/J1.jpg", letter: "J" },
         // { path: "/J2.jpg", letter: "J" },
@@ -200,24 +229,62 @@ const WritingTestPage: React.FC = () => {
         { path: "/K3.jpg", letter: "K" },
         { path: "/K4.jpg", letter: "K" },
         { path: "/K5.jpg", letter: "K" },
+        { path: "/K6.jpg", letter: "K" },
+        { path: "/K7.jpg", letter: "K" },
+        { path: "/K8.jpg", letter: "K" },
+        { path: "/K9.jpg", letter: "K" },
+        // { path: "/K10.jpg", letter: "K" },
         // L
         { path: "/L1.jpg", letter: "L" },
         { path: "/L2.jpg", letter: "L" },
         { path: "/L3.jpg", letter: "L" },
         { path: "/L4.jpg", letter: "L" },
+        { path: "/L5.jpg", letter: "L" },
+        { path: "/L6.jpg", letter: "L" },
+        { path: "/L7.jpg", letter: "L" },
+        // { path: "/L8.jpg", letter: "L" },
+        // { path: "/L9.jpg", letter: "L" },
+        // { path: "/L10.jpg", letter: "L" },
+        // LL
+        { path: "/LL1.jpg", letter: "LL" },
+        { path: "/LL2.jpg", letter: "LL" },
+        { path: "/LL3.jpg", letter: "LL" },
+        { path: "/LL4.jpg", letter: "LL" },
         // M
         { path: "/M1.jpg", letter: "M" },
         { path: "/M2.jpg", letter: "M" },
         { path: "/M3.jpg", letter: "M" },
         { path: "/M4.jpg", letter: "M" },
+        { path: "/M5.jpg", letter: "M" },
+        { path: "/M6.jpg", letter: "M" },
+        { path: "/M7.jpg", letter: "M" },
+        { path: "/M8.jpg", letter: "M" },
+        { path: "/M9.jpg", letter: "M" },
         // N
+        { path: "/N1.jpg", letter: "N" },
+        { path: "/N2.jpg", letter: "N" },
+        { path: "/N3.jpg", letter: "N" },
+        { path: "/N4.jpg", letter: "N" },
+        { path: "/N5.jpg", letter: "N" },
+        { path: "/N6.jpg", letter: "N" },
+        { path: "/N7.jpg", letter: "N" },
+        { path: "/N8.jpg", letter: "N" },
+        { path: "/N9.jpg", letter: "N" },
+        { path: "/N10.jpg", letter: "N" },
         // Ñ
+        { path: "/Ñ1.jpg", letter: "Ñ" },
+        { path: "/Ñ2.jpg", letter: "Ñ" },
+        { path: "/Ñ3.jpg", letter: "Ñ" },
+        { path: "/Ñ4.jpg", letter: "Ñ" },
+        { path: "/Ñ5.jpg", letter: "Ñ" },
+        { path: "/Ñ6.jpg", letter: "Ñ" },
         // O
         { path: "/O1.jpg", letter: "O" },
         { path: "/O2.jpg", letter: "O" },
         { path: "/O3.jpg", letter: "O" },
         { path: "/O4.jpg", letter: "O" },
         { path: "/O5.jpg", letter: "O" },
+        { path: "/O6.jpg", letter: "O" },
         // P
         // Q
         { path: "/Q1.jpg", letter: "Q" },
@@ -229,6 +296,9 @@ const WritingTestPage: React.FC = () => {
         { path: "/Q7.jpg", letter: "Q" },
         { path: "/Q8.jpg", letter: "Q" },
         { path: "/Q9.jpg", letter: "Q" },
+        // { path: "/Q10.jpg", letter: "Q" },
+        // { path: "/Q11.jpg", letter: "Q" },
+        // { path: "/Q12.jpg", letter: "Q" },
         // R
         // S
         { path: "/S1.jpg", letter: "S" },
@@ -236,32 +306,67 @@ const WritingTestPage: React.FC = () => {
         { path: "/S3.jpg", letter: "S" },
         { path: "/S4.jpg", letter: "S" },
         { path: "/S5.jpg", letter: "S" },
+        { path: "/S6.jpg", letter: "S" },
         // T
         { path: "/T1.jpg", letter: "T" },
         { path: "/T2.jpg", letter: "T" },
         { path: "/T3.jpg", letter: "T" },
         { path: "/T4.jpg", letter: "T" },
+        { path: "/T5.jpg", letter: "T" },
         // U
         // V
+        { path: "/V1.jpg", letter: "V" },
+        { path: "/V2.jpg", letter: "V" },
+        { path: "/V3.jpg", letter: "V" },
+        { path: "/V4.jpg", letter: "V" },
+        // { path: "/V5.jpg", letter: "V" },
+        // { path: "/V6.jpg", letter: "V" },
+        { path: "/V7.jpg", letter: "V" },
         // W
+        { path: "/W1.jpg", letter: "W" },
+        { path: "/W2.jpg", letter: "W" },
+        { path: "/W3.jpg", letter: "W" },
+        { path: "/W4.jpg", letter: "W" },
+        { path: "/W5.jpg", letter: "W" },
         // X
         { path: "/X1.jpg", letter: "X" },
         { path: "/X2.jpg", letter: "X" },
         { path: "/X3.jpg", letter: "X" },
         { path: "/X4.jpg", letter: "X" },
         { path: "/X5.jpg", letter: "X" },
+        { path: "/X6.jpg", letter: "X" },
+        { path: "/X7.jpg", letter: "X" },
+        // { path: "/X8.jpg", letter: "X" },
+        // { path: "/X9.jpg", letter: "X" },
+        // { path: "/X10.jpg", letter: "X" },
+        // { path: "/X11.jpg", letter: "X" },
+        // { path: "/X12.jpg", letter: "X" },
+        // { path: "/X13.jpg", letter: "X" },
+        // { path: "/X14.jpg", letter: "X" },
+        // { path: "/X15.jpg", letter: "X" },
         // Y
         { path: "/Y1.jpg", letter: "Y" },
         { path: "/Y2.jpg", letter: "Y" },
         { path: "/Y3.jpg", letter: "Y" },
         { path: "/Y4.jpg", letter: "Y" },
         { path: "/Y5.jpg", letter: "Y" },
+        { path: "/Y6.jpg", letter: "Y" },
+        { path: "/Y7.jpg", letter: "Y" },
+        { path: "/Y8.jpg", letter: "Y" },
+        { path: "/Y9.jpg", letter: "Y" },
+        { path: "/Y10.jpg", letter: "Y" },
         // Z
         { path: "/Z1.jpg", letter: "Z" },
         { path: "/Z2.jpg", letter: "Z" },
         { path: "/Z3.jpg", letter: "Z" },
         { path: "/Z4.jpg", letter: "Z" },
         { path: "/Z5.jpg", letter: "Z" },
+        { path: "/Z6.jpg", letter: "Z" },
+        { path: "/Z7.jpg", letter: "Z" },
+        // { path: "/Z8.jpg", letter: "Z" },
+        // { path: "/Z9.jpg", letter: "Z" },
+        // { path: "/Z10.jpg", letter: "Z" },
+        // { path: "/Z11.jpg", letter: "Z" },
       ];
 
       let loadedCount = 0;
@@ -453,6 +558,33 @@ const WritingTestPage: React.FC = () => {
 
   const stopDrawing = (): void => {
     setIsDrawing(false);
+  };
+
+  const saveDrawing = (): void => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Create a temporary canvas with white background
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) return;
+
+    // Match dimensions of original canvas
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+
+    // Fill with white background
+    tempCtx.fillStyle = "white";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // Draw the original canvas content on top
+    tempCtx.drawImage(canvas, 0, 0);
+
+    // Create a link element to trigger download
+    const link = document.createElement("a");
+    link.download = `${rounds[currentRound].letter}.jpg`;
+    link.href = tempCanvas.toDataURL("image/jpeg", 0.9);
+    link.click();
   };
 
   const checkDrawing = async (): Promise<void> => {
@@ -692,6 +824,19 @@ const WritingTestPage: React.FC = () => {
           >
             <Eraser className="h-6 w-6 text-gray-600" />
           </button>
+
+          {/* Download popup button - show only when result is incorrect */}
+          {result === "incorrect" && (
+            <div className="animate-fadeIn absolute right-4 bottom-4">
+              <button
+                onClick={saveDrawing}
+                className="flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2 font-medium text-white shadow-lg hover:bg-blue-600"
+              >
+                <Download size={18} />
+                <span>Guardar</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <button
