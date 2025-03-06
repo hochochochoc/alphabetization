@@ -52,24 +52,24 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "F", voice: "efe" },
   // { letter: "G", voice: "ge" },
   // { letter: "H", voice: "hache" },
-  // { letter: "I", voice: "i" },
+  { letter: "I", voice: "i" },
   // { letter: "J", voice: "jota" },
-  // { letter: "K", voice: "ka" },
-  // { letter: "L", voice: "ele" },
-  // { letter: "M", voice: "eme" },
+  { letter: "K", voice: "ka" },
+  { letter: "L", voice: "ele" },
+  { letter: "M", voice: "eme" },
   // { letter: "N", voice: "ene" },
   { letter: "O", voice: "o" },
   // { letter: "P", voice: "pe" },
   { letter: "Q", voice: "cu" },
   // { letter: "R", voice: "erre" },
-  // { letter: "S", voice: "ese" },
-  // { letter: "T", voice: "te" },
+  { letter: "S", voice: "ese" },
+  { letter: "T", voice: "te" },
   // { letter: "U", voice: "u" },
   // { letter: "V", voice: "uve" },
   // { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
-  // { letter: "Y", voice: "i griega" },
-  // { letter: "Z", voice: "zeta" },
+  { letter: "Y", voice: "i griega" },
+  { letter: "Z", voice: "zeta" },
 ];
 
 const WritingTestPage: React.FC = () => {
@@ -184,10 +184,32 @@ const WritingTestPage: React.FC = () => {
         // G
         // H
         // I
+        { path: "/I1.jpg", letter: "I" },
+        { path: "/I2.jpg", letter: "I" },
+        { path: "/I3.jpg", letter: "I" },
         // J
+        // { path: "/J1.jpg", letter: "J" },
+        // { path: "/J2.jpg", letter: "J" },
+        // { path: "/J3.jpg", letter: "J" },
+        // { path: "/J4.jpg", letter: "J" },
+        // { path: "/J5.jpg", letter: "J" },
+        // { path: "/J6.jpg", letter: "J" },
         // K
+        { path: "/K1.jpg", letter: "K" },
+        { path: "/K2.jpg", letter: "K" },
+        { path: "/K3.jpg", letter: "K" },
+        { path: "/K4.jpg", letter: "K" },
+        { path: "/K5.jpg", letter: "K" },
         // L
+        { path: "/L1.jpg", letter: "L" },
+        { path: "/L2.jpg", letter: "L" },
+        { path: "/L3.jpg", letter: "L" },
+        { path: "/L4.jpg", letter: "L" },
         // M
+        { path: "/M1.jpg", letter: "M" },
+        { path: "/M2.jpg", letter: "M" },
+        { path: "/M3.jpg", letter: "M" },
+        { path: "/M4.jpg", letter: "M" },
         // N
         // Ñ
         // O
@@ -209,7 +231,16 @@ const WritingTestPage: React.FC = () => {
         { path: "/Q9.jpg", letter: "Q" },
         // R
         // S
+        { path: "/S1.jpg", letter: "S" },
+        { path: "/S2.jpg", letter: "S" },
+        { path: "/S3.jpg", letter: "S" },
+        { path: "/S4.jpg", letter: "S" },
+        { path: "/S5.jpg", letter: "S" },
         // T
+        { path: "/T1.jpg", letter: "T" },
+        { path: "/T2.jpg", letter: "T" },
+        { path: "/T3.jpg", letter: "T" },
+        { path: "/T4.jpg", letter: "T" },
         // U
         // V
         // W
@@ -217,8 +248,20 @@ const WritingTestPage: React.FC = () => {
         { path: "/X1.jpg", letter: "X" },
         { path: "/X2.jpg", letter: "X" },
         { path: "/X3.jpg", letter: "X" },
+        { path: "/X4.jpg", letter: "X" },
+        { path: "/X5.jpg", letter: "X" },
         // Y
+        { path: "/Y1.jpg", letter: "Y" },
+        { path: "/Y2.jpg", letter: "Y" },
+        { path: "/Y3.jpg", letter: "Y" },
+        { path: "/Y4.jpg", letter: "Y" },
+        { path: "/Y5.jpg", letter: "Y" },
         // Z
+        { path: "/Z1.jpg", letter: "Z" },
+        { path: "/Z2.jpg", letter: "Z" },
+        { path: "/Z3.jpg", letter: "Z" },
+        { path: "/Z4.jpg", letter: "Z" },
+        { path: "/Z5.jpg", letter: "Z" },
       ];
 
       let loadedCount = 0;
