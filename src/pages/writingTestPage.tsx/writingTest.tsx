@@ -6,6 +6,7 @@ import { useAppDispatch } from "../../store/hooks";
 import {
   playCorrectSound,
   playIncorrectSound,
+  playEndSound,
 } from "../../store/features/audioSlice";
 
 // ML5 type declarations
@@ -466,6 +467,7 @@ const WritingTestPage: React.FC = () => {
         if (result === "correct") {
           if (currentRound === rounds.length - 1) {
             setIsGameComplete(true);
+            dispatch(playEndSound());
           } else {
             setCurrentRound((prev) => prev + 1);
             clearCanvas();

@@ -31,6 +31,19 @@ const incorrectSoundHowl = new Howl({
   },
 });
 
+const endSoundHowl = new Howl({
+  src: ["/mixkit-completion-of-a-level-2063.wav"],
+  volume: 0.7,
+  html5: true,
+  preload: true,
+  xhr: {
+    method: "GET",
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  },
+});
+
 // Thunks to play the sounds
 export const playCorrectSound = createAsyncThunk(
   "audio/playCorrectSound",
@@ -47,6 +60,11 @@ export const playIncorrectSound = createAsyncThunk(
     return true;
   },
 );
+
+export const playEndSound = createAsyncThunk("audio/playEndSound", async () => {
+  endSoundHowl.play();
+  return true;
+});
 
 // Audio slice interface
 interface AudioState {
