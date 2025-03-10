@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { Volume2, ArrowLeft, Eraser, Download } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../../store/hooks";
+import {
+  playCorrectSound,
+  playIncorrectSound,
+} from "../../store/features/audioSlice";
 
 // ML5 type declarations
 declare global {
@@ -76,6 +81,7 @@ const spanishLetters: SpanishLetter[] = [
 
 const WritingTestPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [currentRound, setCurrentRound] = useState<number>(0);
@@ -696,9 +702,11 @@ const WritingTestPage: React.FC = () => {
 
             setResult(isCorrect ? "correct" : "incorrect");
             if (isCorrect) {
+              dispatch(playCorrectSound());
               setScore((prev) => prev + 1);
               setTotalCorrect((prev) => prev + 1);
             } else {
+              dispatch(playIncorrectSound());
               setScore(0);
             }
             setIsLoading(false);

@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import alphabetReducer from "./features/alphabetSlice";
+import audioReducer from "./features/audioSlice";
 
 export const store = configureStore({
   reducer: {
     alphabet: alphabetReducer,
+    audio: audioReducer,
   },
 });
 
