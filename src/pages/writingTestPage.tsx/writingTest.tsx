@@ -29,6 +29,7 @@ interface KNNClassifier {
   addExample: (features: any, label: string) => void;
   classify: (
     features: any,
+    options: any | null,
     callback: (error: Error | null, result?: KNNClassifierResult) => void,
   ) => void;
   getCount: () => { [key: string]: number };
@@ -193,7 +194,7 @@ const WritingTestPage: React.FC = () => {
         let index = 1;
         let consecutiveErrors = 0;
 
-        // Keep trying until we get 1 consecutive failures
+        // Keep trying until we get consecutive failures
         while (consecutiveErrors < 1) {
           try {
             const imagePath = `/${letter}${index}.jpg`;
@@ -432,6 +433,38 @@ const WritingTestPage: React.FC = () => {
     link.click();
   };
 
+  // Helper function to process the classification result
+  const processClassificationResult = (result: KNNClassifierResult): void => {
+    const targetLetter = rounds[currentRound].letter;
+    const confidences = result.confidencesByLabel || {};
+    const targetConfidence = confidences[targetLetter] || 0;
+
+    // Get best match
+    let bestMatch = { letter: "", confidence: 0 };
+    Object.entries(confidences).forEach(([letter, confidence]) => {
+      if (confidence > bestMatch.confidence) {
+        bestMatch = { letter, confidence: confidence };
+      }
+    });
+
+    console.log(
+      `Target: ${targetLetter}, Best match: ${bestMatch.letter} (${bestMatch.confidence.toFixed(2)})`,
+    );
+
+    const isCorrect = targetConfidence > 0.4;
+
+    setResult(isCorrect ? "correct" : "incorrect");
+    if (isCorrect) {
+      dispatch(playCorrectSound());
+      setScore((prev) => prev + 1);
+      setTotalCorrect((prev) => prev + 1);
+    } else {
+      dispatch(playIncorrectSound());
+      setScore(0);
+    }
+    setIsLoading(false);
+  };
+
   const checkDrawing = async (): Promise<void> => {
     if (!classifier || !isClassifierReady || !examplesLoaded) return;
     setIsLoading(true);
@@ -440,9 +473,9 @@ const WritingTestPage: React.FC = () => {
       const canvas = canvasRef.current;
       if (!canvas) throw new Error("Canvas not found");
 
-      // Normalize drawing to match training examples
+      // Preprocess the image
       const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = 224; // MobileNet input size
+      tempCanvas.width = 224;
       tempCanvas.height = 224;
       const tempCtx = tempCanvas.getContext("2d");
       if (!tempCtx) throw new Error("Could not create temp canvas context");
@@ -451,10 +484,9 @@ const WritingTestPage: React.FC = () => {
       tempCtx.fillStyle = "white";
       tempCtx.fillRect(0, 0, 224, 224);
 
-      // Center and scale the drawing
+      // Process image boundaries and center it
       const originalCtx = canvas.getContext("2d");
       if (!originalCtx) throw new Error("Could not get canvas context");
-
       const pixels = originalCtx.getImageData(
         0,
         0,
@@ -473,7 +505,6 @@ const WritingTestPage: React.FC = () => {
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
           if (pixels.data[i + 3] > 0 && pixels.data[i] < 250) {
-            // Alpha > 0 and not white
             hasDrawing = true;
             minX = Math.min(minX, x);
             maxX = Math.max(maxX, x);
@@ -490,22 +521,20 @@ const WritingTestPage: React.FC = () => {
         return;
       }
 
-      // Add padding
+      // Add padding and center the drawing
       const padding = 20;
       minX = Math.max(0, minX - padding);
       minY = Math.max(0, minY - padding);
       maxX = Math.min(canvas.width, maxX + padding);
       maxY = Math.min(canvas.height, maxY + padding);
 
-      // Center the drawing
       const drawingWidth = maxX - minX;
       const drawingHeight = maxY - minY;
       const size = Math.max(drawingWidth, drawingHeight);
-      const scale = Math.min(180 / size, 1); // Leave room for 224×224
+      const scale = Math.min(180 / size, 1);
       const centerX = 112 - (drawingWidth / 2) * scale;
       const centerY = 112 - (drawingHeight / 2) * scale;
 
-      // Draw with thicker lines
       tempCtx.drawImage(
         canvas,
         minX,
@@ -518,13 +547,16 @@ const WritingTestPage: React.FC = () => {
         drawingHeight * scale,
       );
 
-      // Classify the normalized image
+      // Classify with original k value (default is 3)
       const dataURL = tempCanvas.toDataURL("image/jpeg", 1.0);
       const img = new Image();
       img.onload = () => {
         const features = classifier.featureExtractor.infer(img);
+
+        // First try with k=3 (default)
         classifier.knn.classify(
           features,
+          { k: 5 }, // Explicitly set k=3
           (error: Error | null, result?: KNNClassifierResult) => {
             if (error || !result) {
               setResult("incorrect");
@@ -532,26 +564,50 @@ const WritingTestPage: React.FC = () => {
               return;
             }
 
-            console.log("Raw result:", JSON.stringify(result));
-            const targetLetter = rounds[currentRound].letter;
+            console.log("Result with k=3:", result);
             const confidences = result.confidencesByLabel || {};
+            const targetLetter = rounds[currentRound].letter;
+
+            // Check if there's a tie (multiple letters with same confidence)
+            const confidenceValues = Object.values(confidences);
+            const uniqueConfidences = new Set(confidenceValues).size;
             const targetConfidence = confidences[targetLetter] || 0;
 
-            const isCorrect = targetConfidence > 0.4;
+            // If there's a tie and the target letter has some confidence, try with k=1
+            if (
+              uniqueConfidences < Object.keys(confidences).length &&
+              confidenceValues.some(
+                (v) => Math.abs(v - targetConfidence) < 0.001,
+              ) &&
+              targetConfidence > 0
+            ) {
+              console.log(
+                "Possible tie detected. Trying with k=1 for tie-breaking",
+              );
 
-            setResult(isCorrect ? "correct" : "incorrect");
-            if (isCorrect) {
-              dispatch(playCorrectSound());
-              setScore((prev) => prev + 1);
-              setTotalCorrect((prev) => prev + 1);
+              // Try again with k=1 to break the tie
+              classifier.knn.classify(
+                features,
+                { k: 1 }, // Use k=1 for tie-breaking
+                (error2: Error | null, result2?: KNNClassifierResult) => {
+                  if (error2 || !result2) {
+                    // Fall back to original result
+                    processClassificationResult(result);
+                    return;
+                  }
+
+                  console.log("Result with k=1:", result2);
+                  processClassificationResult(result2);
+                },
+              );
             } else {
-              dispatch(playIncorrectSound());
-              setScore(0);
+              // No tie, or target letter not in tie, use the initial result
+              processClassificationResult(result);
             }
-            setIsLoading(false);
           },
         );
       };
+
       img.src = dataURL;
     } catch (error) {
       console.error("Error:", error);
