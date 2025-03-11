@@ -7,6 +7,7 @@ import MenuPage from "./pages/menuPage/MenuPage";
 import ResultsPage from "./pages/resultsPage/ResultsPage";
 import WritingTestPage from "./pages/writingTestPage.tsx/writingTest";
 import WritingInputPage from "./pages/writingInputPage/writingInputPage";
+import WritingModelPage from "./pages/writingInputPage/writingModelPage";
 import ReadingTestPage from "./pages/readingTestPage/ReadingTest";
 
 // import { AuthProvider } from "./contexts/AuthContext";
@@ -22,6 +23,7 @@ function App() {
       <Route path="/history" element={<ResultsPage />} />
       <Route path="/writing" element={<WritingTestPage />} />
       <Route path="/writinginput" element={<WritingInputPage />} />
+      <Route path="/writingmodel" element={<WritingModelPage />} />
       <Route path="/reading" element={<ReadingTestPage />} />
     </Routes>
     // </AuthProvider>

@@ -53,10 +53,10 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
   { letter: "C", voice: "ce" },
-  // { letter: "D", voice: "de" },
+  { letter: "D", voice: "de" },
   { letter: "E", voice: "E" },
   { letter: "F", voice: "efe" },
-  // { letter: "G", voice: "ge" },
+  { letter: "G", voice: "ge" },
   { letter: "H", voice: "hache" },
   { letter: "I", voice: "i" },
   // { letter: "J", voice: "jota" },
@@ -67,12 +67,12 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "N", voice: "ene" },
   { letter: "Ñ", voice: "eñe" },
   { letter: "O", voice: "o" },
-  // { letter: "P", voice: "pe" },
+  { letter: "P", voice: "pe" },
   { letter: "Q", voice: "cu" },
-  // { letter: "R", voice: "erre" },
+  { letter: "R", voice: "erre" },
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
-  // { letter: "U", voice: "u" },
+  { letter: "U", voice: "u" },
   { letter: "V", voice: "uve" },
   { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
@@ -152,270 +152,78 @@ const WritingTestPage: React.FC = () => {
     knnClassifier: KNNClassifier,
   ): Promise<void> => {
     console.log("Loading example images...");
+    setIsLoading(true);
 
     try {
-      // Define the sample images we want to load
-      const sampleImages = [
-        // A
-        { path: "/A1.jpg", letter: "A" },
-        { path: "/A2.jpg", letter: "A" },
-        { path: "/A3.jpg", letter: "A" },
-        { path: "/A4.jpg", letter: "A" },
-        { path: "/A5.jpg", letter: "A" },
-        { path: "/A6.jpg", letter: "A" },
-        // B
-        { path: "/B1.jpg", letter: "B" },
-        { path: "/B2.jpg", letter: "B" },
-        { path: "/B3.jpg", letter: "B" },
-        { path: "/B4.jpg", letter: "B" },
-        { path: "/B5.jpg", letter: "B" },
-        { path: "/B6.jpg", letter: "B" },
-        { path: "/B7.jpg", letter: "B" },
-        { path: "/B8.jpg", letter: "B" },
-        { path: "/B9.jpg", letter: "B" },
-        // C
-        { path: "/C1.jpg", letter: "C" },
-        { path: "/C2.jpg", letter: "C" },
-        { path: "/C3.jpg", letter: "C" },
-        { path: "/C4.jpg", letter: "C" },
-        { path: "/C5.jpg", letter: "C" },
-        { path: "/C6.jpg", letter: "C" },
-        { path: "/C7.jpg", letter: "C" },
-        { path: "/C8.jpg", letter: "C" },
-        // D
-        // E
-        { path: "/E1.jpg", letter: "E" },
-        { path: "/E2.jpg", letter: "E" },
-        { path: "/E3.jpg", letter: "E" },
-        { path: "/E4.jpg", letter: "E" },
-        { path: "/E5.jpg", letter: "E" },
-        { path: "/E6.jpg", letter: "E" },
-        { path: "/E7.jpg", letter: "E" },
-        { path: "/E8.jpg", letter: "E" },
-        { path: "/E9.jpg", letter: "E" },
-        { path: "/E10.jpg", letter: "E" },
-        // F
-        { path: "/F1.jpg", letter: "F" },
-        { path: "/F2.jpg", letter: "F" },
-        { path: "/F3.jpg", letter: "F" },
-        { path: "/F4.jpg", letter: "F" },
-        { path: "/F5.jpg", letter: "F" },
-        { path: "/F6.jpg", letter: "F" },
-        { path: "/F7.jpg", letter: "F" },
-        { path: "/F8.jpg", letter: "F" },
-        { path: "/F9.jpg", letter: "F" },
-        { path: "/F10.jpg", letter: "F" },
-        { path: "/F11.jpg", letter: "F" },
-        { path: "/F12.jpg", letter: "F" },
-        { path: "/F13.jpg", letter: "F" },
-        { path: "/F14.jpg", letter: "F" },
-        // { path: "/F15.jpg", letter: "F" },
-        // G
-        // H
-        { path: "/H1.jpg", letter: "H" },
-        { path: "/H2.jpg", letter: "H" },
-        { path: "/H3.jpg", letter: "H" },
-        // I
-        { path: "/I1.jpg", letter: "I" },
-        { path: "/I2.jpg", letter: "I" },
-        { path: "/I3.jpg", letter: "I" },
-        { path: "/I4.jpg", letter: "I" },
-        { path: "/I5.jpg", letter: "I" },
-        { path: "/I6.jpg", letter: "I" },
-        { path: "/I8.jpg", letter: "I" },
-        // J
-        // { path: "/J1.jpg", letter: "J" },
-        // { path: "/J2.jpg", letter: "J" },
-        // { path: "/J3.jpg", letter: "J" },
-        // { path: "/J4.jpg", letter: "J" },
-        // { path: "/J5.jpg", letter: "J" },
-        // { path: "/J6.jpg", letter: "J" },
-        // K
-        { path: "/K1.jpg", letter: "K" },
-        { path: "/K2.jpg", letter: "K" },
-        { path: "/K3.jpg", letter: "K" },
-        { path: "/K4.jpg", letter: "K" },
-        { path: "/K5.jpg", letter: "K" },
-        { path: "/K6.jpg", letter: "K" },
-        { path: "/K7.jpg", letter: "K" },
-        { path: "/K8.jpg", letter: "K" },
-        { path: "/K9.jpg", letter: "K" },
-        // { path: "/K10.jpg", letter: "K" },
-        // L
-        { path: "/L1.jpg", letter: "L" },
-        { path: "/L2.jpg", letter: "L" },
-        { path: "/L3.jpg", letter: "L" },
-        { path: "/L4.jpg", letter: "L" },
-        { path: "/L5.jpg", letter: "L" },
-        { path: "/L6.jpg", letter: "L" },
-        { path: "/L7.jpg", letter: "L" },
-        // { path: "/L8.jpg", letter: "L" },
-        // { path: "/L9.jpg", letter: "L" },
-        // { path: "/L10.jpg", letter: "L" },
-        // LL
-        { path: "/LL1.jpg", letter: "LL" },
-        { path: "/LL2.jpg", letter: "LL" },
-        { path: "/LL3.jpg", letter: "LL" },
-        { path: "/LL4.jpg", letter: "LL" },
-        // M
-        { path: "/M1.jpg", letter: "M" },
-        { path: "/M2.jpg", letter: "M" },
-        { path: "/M3.jpg", letter: "M" },
-        { path: "/M4.jpg", letter: "M" },
-        { path: "/M5.jpg", letter: "M" },
-        { path: "/M6.jpg", letter: "M" },
-        { path: "/M7.jpg", letter: "M" },
-        { path: "/M8.jpg", letter: "M" },
-        { path: "/M9.jpg", letter: "M" },
-        // N
-        { path: "/N1.jpg", letter: "N" },
-        { path: "/N2.jpg", letter: "N" },
-        { path: "/N3.jpg", letter: "N" },
-        { path: "/N4.jpg", letter: "N" },
-        { path: "/N5.jpg", letter: "N" },
-        { path: "/N6.jpg", letter: "N" },
-        { path: "/N7.jpg", letter: "N" },
-        { path: "/N8.jpg", letter: "N" },
-        { path: "/N9.jpg", letter: "N" },
-        { path: "/N10.jpg", letter: "N" },
-        // Ñ
-        { path: "/Ñ1.jpg", letter: "Ñ" },
-        { path: "/Ñ2.jpg", letter: "Ñ" },
-        { path: "/Ñ3.jpg", letter: "Ñ" },
-        { path: "/Ñ4.jpg", letter: "Ñ" },
-        { path: "/Ñ5.jpg", letter: "Ñ" },
-        { path: "/Ñ6.jpg", letter: "Ñ" },
-        // O
-        { path: "/O1.jpg", letter: "O" },
-        { path: "/O2.jpg", letter: "O" },
-        { path: "/O3.jpg", letter: "O" },
-        { path: "/O4.jpg", letter: "O" },
-        { path: "/O5.jpg", letter: "O" },
-        { path: "/O6.jpg", letter: "O" },
-        // P
-        // Q
-        { path: "/Q1.jpg", letter: "Q" },
-        { path: "/Q2.jpg", letter: "Q" },
-        { path: "/Q3.jpg", letter: "Q" },
-        { path: "/Q4.jpg", letter: "Q" },
-        { path: "/Q5.jpg", letter: "Q" },
-        { path: "/Q6.jpg", letter: "Q" },
-        { path: "/Q7.jpg", letter: "Q" },
-        { path: "/Q8.jpg", letter: "Q" },
-        { path: "/Q9.jpg", letter: "Q" },
-        // { path: "/Q10.jpg", letter: "Q" },
-        // { path: "/Q11.jpg", letter: "Q" },
-        // { path: "/Q12.jpg", letter: "Q" },
-        // R
-        // S
-        { path: "/S1.jpg", letter: "S" },
-        { path: "/S2.jpg", letter: "S" },
-        { path: "/S3.jpg", letter: "S" },
-        { path: "/S4.jpg", letter: "S" },
-        { path: "/S5.jpg", letter: "S" },
-        { path: "/S6.jpg", letter: "S" },
-        // T
-        { path: "/T1.jpg", letter: "T" },
-        { path: "/T2.jpg", letter: "T" },
-        { path: "/T3.jpg", letter: "T" },
-        { path: "/T4.jpg", letter: "T" },
-        { path: "/T5.jpg", letter: "T" },
-        // U
-        // V
-        { path: "/V1.jpg", letter: "V" },
-        { path: "/V2.jpg", letter: "V" },
-        { path: "/V3.jpg", letter: "V" },
-        { path: "/V4.jpg", letter: "V" },
-        // { path: "/V5.jpg", letter: "V" },
-        // { path: "/V6.jpg", letter: "V" },
-        { path: "/V7.jpg", letter: "V" },
-        // W
-        { path: "/W1.jpg", letter: "W" },
-        { path: "/W2.jpg", letter: "W" },
-        { path: "/W3.jpg", letter: "W" },
-        { path: "/W4.jpg", letter: "W" },
-        { path: "/W5.jpg", letter: "W" },
-        // X
-        { path: "/X1.jpg", letter: "X" },
-        { path: "/X2.jpg", letter: "X" },
-        { path: "/X3.jpg", letter: "X" },
-        { path: "/X4.jpg", letter: "X" },
-        { path: "/X5.jpg", letter: "X" },
-        { path: "/X6.jpg", letter: "X" },
-        { path: "/X7.jpg", letter: "X" },
-        // { path: "/X8.jpg", letter: "X" },
-        // { path: "/X9.jpg", letter: "X" },
-        // { path: "/X10.jpg", letter: "X" },
-        // { path: "/X11.jpg", letter: "X" },
-        // { path: "/X12.jpg", letter: "X" },
-        // { path: "/X13.jpg", letter: "X" },
-        // { path: "/X14.jpg", letter: "X" },
-        // { path: "/X15.jpg", letter: "X" },
-        // Y
-        { path: "/Y1.jpg", letter: "Y" },
-        { path: "/Y2.jpg", letter: "Y" },
-        { path: "/Y3.jpg", letter: "Y" },
-        { path: "/Y4.jpg", letter: "Y" },
-        { path: "/Y5.jpg", letter: "Y" },
-        { path: "/Y6.jpg", letter: "Y" },
-        { path: "/Y7.jpg", letter: "Y" },
-        { path: "/Y8.jpg", letter: "Y" },
-        { path: "/Y9.jpg", letter: "Y" },
-        { path: "/Y10.jpg", letter: "Y" },
-        // Z
-        { path: "/Z1.jpg", letter: "Z" },
-        { path: "/Z2.jpg", letter: "Z" },
-        { path: "/Z3.jpg", letter: "Z" },
-        { path: "/Z4.jpg", letter: "Z" },
-        { path: "/Z5.jpg", letter: "Z" },
-        { path: "/Z6.jpg", letter: "Z" },
-        { path: "/Z7.jpg", letter: "Z" },
-        // { path: "/Z8.jpg", letter: "Z" },
-        // { path: "/Z9.jpg", letter: "Z" },
-        // { path: "/Z10.jpg", letter: "Z" },
-        // { path: "/Z11.jpg", letter: "Z" },
+      // Define all letters we want to load examples for
+      const letters = [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "K",
+        "L",
+        "LL",
+        "M",
+        "N",
+        "Ñ",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
       ];
 
-      let loadedCount = 0;
-      const totalImages = sampleImages.length;
+      let totalProcessed = 0;
 
-      // Function to load an image and add it to the classifier
-      const loadImageForClassifier = (
-        imagePath: string,
-        letterLabel: string,
-      ) => {
-        return new Promise<void>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => {
-            try {
-              // Extract features from the image
-              const features = featureExtractor.infer(img);
-              // Add the features to the classifier with the letter as the label
-              knnClassifier.addExample(features, letterLabel);
-              loadedCount++;
-              console.log(
-                `Loaded ${loadedCount}/${totalImages}: ${imagePath} as ${letterLabel}`,
-              );
-              resolve();
-            } catch (err) {
-              console.error(`Error processing image ${imagePath}:`, err);
-              reject(err);
+      // Process each letter
+      for (const letter of letters) {
+        let index = 1;
+        let consecutiveErrors = 0;
+
+        // Keep trying until we get 1 consecutive failures
+        while (consecutiveErrors < 1) {
+          try {
+            const imagePath = `/${letter}${index}.jpg`;
+            await loadImageForClassifier(
+              imagePath,
+              letter,
+              featureExtractor,
+              knnClassifier,
+            );
+            totalProcessed++;
+            consecutiveErrors = 0; // Reset error counter on success
+            index++;
+          } catch (error) {
+            consecutiveErrors++;
+            console.log(`Could not find ${letter}${index}.jpg, skipping`);
+            index++;
+
+            // If we've already successfully loaded at least one image and hit 3 errors,
+            // assume we're done with this letter
+            if (index > 3 && consecutiveErrors >= 3) {
+              console.log(`Finished loading examples for ${letter}`);
+              break;
             }
-          };
-          img.onerror = (err) => {
-            console.error(`Failed to load image ${imagePath}:`, err);
-            reject(new Error(`Failed to load image ${imagePath}`));
-          };
-          img.src = imagePath;
-        });
-      };
-
-      // Load all sample images
-      for (const sample of sampleImages) {
-        await loadImageForClassifier(sample.path, sample.letter);
+          }
+        }
       }
 
-      console.log("All example images loaded successfully");
+      console.log(
+        `All example images loaded successfully (${totalProcessed} total)`,
+      );
       console.log("Example counts:", knnClassifier.getCount());
       setExamplesLoaded(true);
       setIsClassifierReady(true);
@@ -424,6 +232,35 @@ const WritingTestPage: React.FC = () => {
       console.error("Error loading example images:", error);
       setIsLoading(false);
     }
+  };
+
+  // Function to load an image and add it to the classifier
+  const loadImageForClassifier = (
+    imagePath: string,
+    letterLabel: string,
+    featureExtractor: FeatureExtractor,
+    knnClassifier: KNNClassifier,
+  ): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Extract features from the image
+          const features = featureExtractor.infer(img);
+          // Add the features to the classifier with the letter as the label
+          knnClassifier.addExample(features, letterLabel);
+          console.log(`Loaded: ${imagePath} as ${letterLabel}`);
+          resolve();
+        } catch (err) {
+          console.error(`Error processing image ${imagePath}:`, err);
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        reject(new Error(`Failed to load image ${imagePath}`));
+      };
+      img.src = imagePath;
+    });
   };
 
   const playSound = async (): Promise<void> => {
