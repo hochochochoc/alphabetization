@@ -51,34 +51,34 @@ interface SpanishLetter {
 
 // Define Spanish letters
 const spanishLetters: SpanishLetter[] = [
-  { letter: "A", voice: "A" },
-  { letter: "B", voice: "be" },
-  { letter: "C", voice: "ce" },
-  { letter: "D", voice: "de" },
-  { letter: "E", voice: "E" },
-  { letter: "F", voice: "efe" },
-  { letter: "G", voice: "ge" },
-  { letter: "H", voice: "hache" },
-  { letter: "I", voice: "i" },
-  // { letter: "J", voice: "jota" },
-  { letter: "K", voice: "ka" },
-  { letter: "L", voice: "ele" },
-  { letter: "LL", voice: "eyye" },
-  { letter: "M", voice: "eme" },
-  { letter: "N", voice: "ene" },
-  { letter: "Ñ", voice: "eñe" },
-  { letter: "O", voice: "o" },
-  { letter: "P", voice: "pe" },
-  { letter: "Q", voice: "cu" },
+  // // { letter: "A", voice: "A" },
+  // // { letter: "B", voice: "be" },
+  // { letter: "C", voice: "ce" },
+  // // { letter: "D", voice: "de" },
+  // { letter: "E", voice: "E" },
+  // { letter: "F", voice: "efe" },
+  // // { letter: "G", voice: "ge" },
+  // { letter: "H", voice: "hache" },
+  // // { letter: "I", voice: "i" },
+  // // { letter: "J", voice: "jota" },
+  // { letter: "K", voice: "ka" },
+  // { letter: "L", voice: "ele" },
+  // { letter: "LL", voice: "eyye" },
+  // { letter: "M", voice: "eme" },
+  // // { letter: "N", voice: "ene" },
+  // { letter: "Ñ", voice: "eñe" },
+  // // { letter: "O", voice: "o" },
+  { letter: "P", voice: "Ppee" },
+  // { letter: "Q", voice: "cu" },
   { letter: "R", voice: "erre" },
-  { letter: "S", voice: "ese" },
-  { letter: "T", voice: "te" },
-  { letter: "U", voice: "u" },
-  { letter: "V", voice: "uve" },
-  { letter: "W", voice: "uve doble" },
-  { letter: "X", voice: "equis" },
-  { letter: "Y", voice: "i griega" },
-  { letter: "Z", voice: "zeta" },
+  // { letter: "S", voice: "ese" },
+  // // { letter: "T", voice: "te" },
+  // // { letter: "U", voice: "uhhh" },
+  // { letter: "V", voice: "uve" },
+  // { letter: "W", voice: "uve doble" },
+  // // { letter: "X", voice: "equis" },
+  // // { letter: "Y", voice: "i griega" },
+  // { letter: "Z", voice: "zeta" },
 ];
 
 const WritingTestPage: React.FC = () => {
@@ -95,6 +95,7 @@ const WritingTestPage: React.FC = () => {
   const [classifier, setClassifier] = useState<ML5Classifier | null>(null);
   const [isClassifierReady, setIsClassifierReady] = useState<boolean>(false);
   const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
+  const [showSaveButton, setShowSaveButton] = useState<boolean>(false);
   const [rounds, setRounds] = useState<SpanishLetter[]>(
     Array(8)
       .fill(null)
@@ -359,6 +360,8 @@ const WritingTestPage: React.FC = () => {
 
   const startDrawing = (e: React.TouchEvent | React.MouseEvent): void => {
     setIsDrawing(true);
+    setShowSaveButton(false);
+
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!ctx || !canvas) return;
@@ -458,9 +461,11 @@ const WritingTestPage: React.FC = () => {
       dispatch(playCorrectSound());
       setScore((prev) => prev + 1);
       setTotalCorrect((prev) => prev + 1);
+      setShowSaveButton(false); // Don't show save button for correct answers
     } else {
       dispatch(playIncorrectSound());
       setScore(0);
+      setShowSaveButton(true); // Show save button for incorrect answers
     }
     setIsLoading(false);
   };
@@ -637,6 +642,7 @@ const WritingTestPage: React.FC = () => {
               setScore(0);
               setTotalCorrect(0);
               setIsGameComplete(false);
+              setShowSaveButton(false);
               setRounds(
                 Array(8)
                   .fill(null)
@@ -728,8 +734,8 @@ const WritingTestPage: React.FC = () => {
             <Eraser className="h-6 w-6 text-gray-600" />
           </button>
 
-          {/* Download popup button - show only when result is incorrect */}
-          {result === "incorrect" && (
+          {/* Download button - show when showSaveButton is true */}
+          {showSaveButton && (
             <div className="animate-fadeIn absolute right-4 bottom-4">
               <button
                 onClick={saveDrawing}
