@@ -8,7 +8,7 @@ LetraLingo es una aplicación diseñada para acompañar la enseñanza del alfabe
 
 ## Características
 
-<!-- - **Reconocimiento de Letras**: Sistema de IA que identifica y valida dibujos de letras con alta precisión -->
+- **Reconocimiento de Letras**: Sistema de IA que identifica y valida dibujos de letras con alta precisión -**Seguimiento de Progreso**: Visualización del avance por cada módulo y letra del alfabeto
 
 ## Tecnologías Utilizadas
 
@@ -82,7 +82,17 @@ DB_NAME=alphabetization
 
 ### Configuración de la Base de Datos
 
+1. Crea una base de datos MySQL llamada `alphabetization`
+2. Ejecuta el script SQL ubicado en `/sql/schema.sql` para crear las tablas necesarias
+3. Opcionalmente, carga los datos iniciales con el script `/sql/seed.sql`
+
 ### Pasos de Instalación
+
+Clona el repositorio: `git clone https://github.com/tu-usuario/LetraLingo.git`
+Instala las dependencias: `npm install`
+Configura el archivo `.env` como se indicó anteriormente
+Inicia el servidor de desarrollo: `npm run dev`
+Para producción, compila el proyecto: `npm run build`
 
 ## Uso
 
@@ -104,3 +114,8 @@ DB_NAME=alphabetization
 - Sistema de reconocimiento de voz valida tu pronunciación
 
 ## Puntos de Acceso API
+
+- `GET /api/listening_progress`: Obtiene el progreso del modo escucha por letra
+- `POST /api/session`: Registra una nueva sesión de prueba
+- `GET /api/user/progress`: Obtiene el progreso general del usuario
+- `POST /api/writing/validate`: Valida un dibujo de letra

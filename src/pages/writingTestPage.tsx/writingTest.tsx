@@ -461,11 +461,11 @@ const WritingTestPage: React.FC = () => {
       dispatch(playCorrectSound());
       setScore((prev) => prev + 1);
       setTotalCorrect((prev) => prev + 1);
-      setShowSaveButton(false); // Don't show save button for correct answers
+      setShowSaveButton(false);
     } else {
       dispatch(playIncorrectSound());
       setScore(0);
-      setShowSaveButton(true); // Show save button for incorrect answers
+      setShowSaveButton(true);
     }
     setIsLoading(false);
   };
@@ -734,7 +734,7 @@ const WritingTestPage: React.FC = () => {
             <Eraser className="h-6 w-6 text-gray-600" />
           </button>
 
-          {/* Download button - show when showSaveButton is true */}
+          {/* Download button */}
           {showSaveButton && (
             <div className="animate-fadeIn absolute right-4 bottom-4">
               <button
