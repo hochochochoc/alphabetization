@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
   User,
@@ -19,6 +20,7 @@ interface AuthContextType {
     displayName: string,
   ) => Promise<UserCredential>;
   login: (email: string, password: string) => Promise<UserCredential>;
+  loginAnonymously: () => Promise<UserCredential>;
   logout: () => Promise<void>;
 }
 
@@ -52,6 +54,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return signInWithEmailAndPassword(auth, email, password);
   }
 
+  function loginAnonymously() {
+    return signInAnonymously(auth);
+  }
+
   function logout() {
     return signOut(auth);
   }
@@ -70,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loading,
     signup,
     login,
+    loginAnonymously,
     logout,
   };
 
