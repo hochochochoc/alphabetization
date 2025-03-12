@@ -304,12 +304,12 @@ const ReadingTestPage = () => {
 
       <div className="h-full w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mt-8 mb-6 flex items-center justify-center">
-          <span className="text-8xl font-bold text-blue-600">
+          <span className="text-[120px] font-bold text-blue-600">
             {rounds[currentRound].letter}
           </span>
         </div>
 
-        <div className="relative mb-20 flex h-64 w-full items-center justify-center">
+        <div className="relative mb-10 flex h-64 w-full items-center justify-center">
           <button
             onMouseDown={startRecording}
             onMouseUp={stopRecording}

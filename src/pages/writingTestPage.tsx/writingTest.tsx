@@ -19,7 +19,6 @@ declare global {
 interface KNNClassifierResult {
   label: string;
   confidence: number;
-  // Optional fields that may exist in newer ml5 versions
   confidences?: { [key: string]: number };
   confidencesByLabel?: { [key: string]: number };
   classIndex?: number;
@@ -94,6 +93,7 @@ const WritingTestPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [classifier, setClassifier] = useState<ML5Classifier | null>(null);
   const [isClassifierReady, setIsClassifierReady] = useState<boolean>(false);
+  const [modelLoading, setModelLoading] = useState<boolean>(true);
   const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
   const [showSaveButton, setShowSaveButton] = useState<boolean>(false);
   const [rounds, setRounds] = useState<SpanishLetter[]>(
@@ -116,6 +116,7 @@ const WritingTestPage: React.FC = () => {
   useEffect(() => {
     const initializeClassifier = async (): Promise<void> => {
       try {
+        setModelLoading(true);
         // Check if ml5 is available in window
         if (!window.ml5) {
           console.error("ml5 is not available. Make sure to include the CDN.");
@@ -142,6 +143,7 @@ const WritingTestPage: React.FC = () => {
         });
       } catch (error) {
         console.error("Error initializing ML5 classifier:", error);
+        setModelLoading(false);
       }
     };
 
@@ -230,9 +232,11 @@ const WritingTestPage: React.FC = () => {
       setExamplesLoaded(true);
       setIsClassifierReady(true);
       setIsLoading(false);
+      setModelLoading(false);
     } catch (error) {
       console.error("Error loading example images:", error);
       setIsLoading(false);
+      setModelLoading(false);
     }
   };
 
@@ -627,6 +631,9 @@ const WritingTestPage: React.FC = () => {
     return "bg-gradient-to-br from-blue-100 to-white";
   };
 
+  // CSS class for shimmer effect
+  const skeletonClass = "animate-pulse bg-gray-300";
+
   if (isGameComplete) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-100 to-white p-4">
@@ -671,124 +678,174 @@ const WritingTestPage: React.FC = () => {
     <div
       className={`flex min-h-screen flex-col items-center p-4 transition-colors duration-300 ${getBgColor()}`}
     >
+      {/* Top navigation bar */}
       <div className="mb-2 flex w-full max-w-md items-center justify-between gap-4">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center justify-center rounded-full bg-white p-2 shadow-md hover:bg-gray-50"
-        >
-          <ArrowLeft className="h-6 w-6 text-gray-600" />
-        </button>
-        <div className="mt-3 w-[90%] pr-4">
-          <div className="mb-1 flex w-full max-w-md items-center justify-between">
-            <div className="text-xs font-bold text-blue-800">
-              {score} SEGUIDAS
-            </div>
-          </div>
+        {modelLoading ? (
+          // Shimmer effect for back button
+          <div
+            className={`h-10 w-10 rounded-full bg-gray-200 ${skeletonClass}`}
+          ></div>
+        ) : (
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center justify-center rounded-full bg-white p-2 shadow-md hover:bg-gray-50"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+        )}
 
-          <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-blue-200">
-            <div
-              className="h-full rounded-full bg-blue-600 transition-all duration-300"
-              style={{ width: `${(currentRound / rounds.length) * 100}%` }}
-            >
+        <div className="mt-3 w-[90%] pr-4">
+          {modelLoading ? (
+            <>
+              {/* Shimmer effect for score indicator */}
               <div
-                className="mx-auto h-2/5 translate-y-0.5 transform rounded-full bg-blue-400/50"
-                style={{
-                  width:
-                    Math.max(80, (currentRound / rounds.length) * 90) + "%",
-                }}
-              />
-            </div>
-          </div>
+                className={`mb-2 h-4 w-24 bg-gray-200 ${skeletonClass}`}
+              ></div>
+              {/* Shimmer effect for progress bar */}
+              <div
+                className={`mb-4 h-3 w-full rounded-full bg-gray-200 ${skeletonClass}`}
+              ></div>
+            </>
+          ) : (
+            <>
+              <div className="mb-1 flex w-full max-w-md items-center justify-between">
+                <div className="text-xs font-bold text-blue-800">
+                  {score} SEGUIDAS
+                </div>
+              </div>
+
+              <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-blue-200">
+                <div
+                  className="h-full rounded-full bg-blue-600 transition-all duration-300"
+                  style={{ width: `${(currentRound / rounds.length) * 100}%` }}
+                >
+                  <div
+                    className="mx-auto h-2/5 translate-y-0.5 transform rounded-full bg-blue-400/50"
+                    style={{
+                      width:
+                        Math.max(80, (currentRound / rounds.length) * 90) + "%",
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Main content */}
       <div className="h-full w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <button
-          onClick={playSound}
-          className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-4 text-sky-400 transition-colors duration-200 hover:bg-blue-700 hover:text-white"
-        >
-          <Volume2 size={24} />
-          <span className="text-lg font-semibold">Escucha otra vez</span>
-        </button>
+        {modelLoading ? (
+          <>
+            {/* Shimmer effect for sound button */}
+            <div
+              className={`mb-6 h-14 w-full rounded-xl bg-gray-200 ${skeletonClass}`}
+            ></div>
 
-        <div className="relative mb-6 h-92 w-full">
-          <canvas
-            ref={canvasRef}
-            className="h-full w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={(e: React.TouchEvent) => {
-              startDrawing(e);
-            }}
-            onTouchMove={(e: React.TouchEvent) => {
-              draw(e);
-            }}
-            onTouchEnd={stopDrawing}
-          />
-          <button
-            onClick={clearCanvas}
-            className="absolute top-2 right-2 rounded-full bg-white p-2 shadow-md hover:bg-gray-50"
-          >
-            <Eraser className="h-6 w-6 text-gray-600" />
-          </button>
+            {/* Shimmer effect for canvas */}
+            <div
+              className={`relative mb-6 h-92 w-full rounded-xl bg-gray-200 ${skeletonClass}`}
+            ></div>
 
-          {/* Download button */}
-          {showSaveButton && (
-            <div className="animate-fadeIn absolute right-4 bottom-4">
+            {/* Shimmer effect for check button */}
+            <div
+              className={`h-14 w-full rounded-full bg-gray-200 ${skeletonClass}`}
+            ></div>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={playSound}
+              className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-4 text-sky-400 transition-colors duration-200 hover:bg-blue-700 hover:text-white"
+            >
+              <Volume2 size={24} />
+              <span className="text-lg font-semibold">Escucha otra vez</span>
+            </button>
+
+            <div className="relative mb-6 h-92 w-full">
+              <canvas
+                ref={canvasRef}
+                className="h-full w-full touch-none rounded-xl border-2 border-gray-200 bg-white"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={(e: React.TouchEvent) => {
+                  startDrawing(e);
+                }}
+                onTouchMove={(e: React.TouchEvent) => {
+                  draw(e);
+                }}
+                onTouchEnd={stopDrawing}
+              />
               <button
-                onClick={saveDrawing}
-                className="flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2 font-medium text-white shadow-lg hover:bg-blue-600"
+                onClick={clearCanvas}
+                className="absolute top-2 right-2 rounded-full bg-white p-2 shadow-md hover:bg-gray-50"
               >
-                <Download size={18} />
-                <span>Guardar</span>
+                <Eraser className="h-6 w-6 text-gray-600" />
               </button>
-            </div>
-          )}
-        </div>
 
-        <button
-          onClick={checkDrawing}
-          disabled={isLoading || !isClassifierReady}
-          className={`relative w-full rounded-full border-b-6 p-4 font-semibold text-white transition-colors duration-200 ${
-            isLoading || !isClassifierReady
-              ? "cursor-not-allowed border-gray-400 bg-gray-300"
-              : "border-blue-800 bg-blue-500 hover:bg-blue-600"
-          }`}
-        >
-          <svg
-            className="absolute top-0 right-0 h-16 w-32"
-            viewBox="0 0 100 50"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M62,7 L63,7"
-              stroke="white"
-              strokeWidth="5"
-              fill="none"
-              strokeLinecap="round"
-              opacity="0.3"
-            />
-          </svg>
-          <svg
-            className="absolute top-0 right-0 h-16 w-32"
-            viewBox="0 0 100 50"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M70,7 L76,7 C84,6.8 92,13 93.2,20"
-              stroke="white"
-              strokeWidth="5"
-              fill="none"
-              strokeLinecap="round"
-              opacity="0.3"
-            />
-          </svg>
-          <span>
-            {!isClassifierReady ? "Cargando ejemplos..." : "Comprobar"}
-          </span>
-        </button>
+              {/* Download button */}
+              {showSaveButton && (
+                <div className="absolute right-4 bottom-4 animate-[fadeIn_0.3s_ease-in-out]">
+                  <button
+                    onClick={saveDrawing}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2 font-medium text-white shadow-lg hover:bg-blue-600"
+                  >
+                    <Download size={18} />
+                    <span>Guardar</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={checkDrawing}
+              disabled={isLoading || !isClassifierReady}
+              className={`relative w-full rounded-full border-b-6 p-4 font-semibold text-white transition-colors duration-200 ${
+                isLoading || !isClassifierReady
+                  ? "cursor-not-allowed border-gray-400 bg-gray-300"
+                  : "border-blue-800 bg-blue-500 hover:bg-blue-600"
+              }`}
+            >
+              <svg
+                className="absolute top-0 right-0 h-16 w-32"
+                viewBox="0 0 100 50"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M62,7 L63,7"
+                  stroke="white"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+              </svg>
+              <svg
+                className="absolute top-0 right-0 h-16 w-32"
+                viewBox="0 0 100 50"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M70,7 L76,7 C84,6.8 92,13 93.2,20"
+                  stroke="white"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+              </svg>
+              <span>
+                {isLoading
+                  ? "Procesando..."
+                  : !isClassifierReady
+                    ? "Cargando modelo..."
+                    : "Comprobar"}
+              </span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
