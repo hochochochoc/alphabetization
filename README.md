@@ -2,7 +2,7 @@
 
 LetraLingo es una aplicación diseñada para acompañar la enseñanza del alfabeto a adultos, incorporando módulos de escritura, escucha y lectura.
 
-![Demo GIF](public/demo_video.gif)
+![Demo GIF](public/readme_gif.gif)
 
 ## Descripción
 
