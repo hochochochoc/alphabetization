@@ -8,40 +8,7 @@ import {
   playIncorrectSound,
   playEndSound,
 } from "../../store/features/audioSlice";
-
-// ML5 type declarations
-declare global {
-  interface Window {
-    ml5: any;
-  }
-}
-
-interface KNNClassifierResult {
-  label: string;
-  confidence: number;
-  confidences?: { [key: string]: number };
-  confidencesByLabel?: { [key: string]: number };
-  classIndex?: number;
-}
-
-interface KNNClassifier {
-  addExample: (features: any, label: string) => void;
-  classify: (
-    features: any,
-    options: any | null,
-    callback: (error: Error | null, result?: KNNClassifierResult) => void,
-  ) => void;
-  getCount: () => { [key: string]: number };
-}
-
-interface FeatureExtractor {
-  infer: (input: HTMLCanvasElement | HTMLImageElement) => any;
-}
-
-interface ML5Classifier {
-  knn: KNNClassifier;
-  featureExtractor: FeatureExtractor;
-}
+import { ml5Handler } from "../../utils/ml5Handler";
 
 interface SpanishLetter {
   letter: string;
@@ -91,10 +58,7 @@ const WritingTestPage: React.FC = () => {
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [isGameComplete, setIsGameComplete] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [classifier, setClassifier] = useState<ML5Classifier | null>(null);
-  const [isClassifierReady, setIsClassifierReady] = useState<boolean>(false);
   const [modelLoading, setModelLoading] = useState<boolean>(true);
-  const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
   const [showSaveButton, setShowSaveButton] = useState<boolean>(false);
   const [rounds, setRounds] = useState<SpanishLetter[]>(
     Array(8)
@@ -103,6 +67,33 @@ const WritingTestPage: React.FC = () => {
         () => spanishLetters[Math.floor(Math.random() * spanishLetters.length)],
       ),
   );
+  const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const initializeML5 = async (): Promise<void> => {
+      try {
+        setModelLoading(true);
+        await ml5Handler.initialize();
+
+        // Add this check
+        const checkExamples = () => {
+          if (ml5Handler.isExamplesLoaded()) {
+            setExamplesLoaded(true);
+            setModelLoading(false);
+          } else {
+            setTimeout(checkExamples, 500);
+          }
+        };
+
+        checkExamples();
+      } catch (error) {
+        console.error("Error initializing ML5:", error);
+        setModelLoading(false);
+      }
+    };
+
+    initializeML5();
+  }, []);
 
   const polly = new PollyClient({
     region: import.meta.env.VITE_AWS_REGION || "eu-west-3",
@@ -112,162 +103,21 @@ const WritingTestPage: React.FC = () => {
     },
   });
 
-  // Initialize ML5 classifier
+  // Initialize ML5 handler
   useEffect(() => {
-    const initializeClassifier = async (): Promise<void> => {
+    const initializeML5 = async (): Promise<void> => {
       try {
         setModelLoading(true);
-        // Check if ml5 is available in window
-        if (!window.ml5) {
-          console.error("ml5 is not available. Make sure to include the CDN.");
-          return;
-        }
-
-        // Create a KNN classifier
-        const knnClassifier = window.ml5.KNNClassifier();
-
-        // Create a feature extractor using MobileNet
-        const featureExtractor = window.ml5.featureExtractor(
-          "MobileNet",
-          () => {
-            console.log("Feature extractor loaded");
-
-            // Load example images and add them to classifier
-            loadExampleImages(featureExtractor, knnClassifier);
-          },
-        );
-
-        setClassifier({
-          knn: knnClassifier,
-          featureExtractor: featureExtractor,
-        });
+        await ml5Handler.initialize();
+        setModelLoading(false);
       } catch (error) {
-        console.error("Error initializing ML5 classifier:", error);
+        console.error("Error initializing ML5:", error);
         setModelLoading(false);
       }
     };
 
-    initializeClassifier();
+    initializeML5();
   }, []);
-
-  // Load example images for each letter
-  const loadExampleImages = async (
-    featureExtractor: FeatureExtractor,
-    knnClassifier: KNNClassifier,
-  ): Promise<void> => {
-    console.log("Loading example images...");
-    setIsLoading(true);
-
-    try {
-      // Define all letters we want to load examples for
-      const letters = [
-        "A",
-        "B",
-        "C",
-        "D",
-        "E",
-        "F",
-        "G",
-        "H",
-        "I",
-        "K",
-        "L",
-        "LL",
-        "M",
-        "N",
-        "Ñ",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-        "T",
-        "U",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z",
-      ];
-
-      let totalProcessed = 0;
-
-      // Process each letter
-      for (const letter of letters) {
-        let index = 1;
-        let consecutiveErrors = 0;
-
-        // Keep trying until we get consecutive failures
-        while (consecutiveErrors < 1) {
-          try {
-            const imagePath = `/${letter}${index}.jpg`;
-            await loadImageForClassifier(
-              imagePath,
-              letter,
-              featureExtractor,
-              knnClassifier,
-            );
-            totalProcessed++;
-            consecutiveErrors = 0; // Reset error counter on success
-            index++;
-          } catch (error) {
-            consecutiveErrors++;
-            console.log(`Could not find ${letter}${index}.jpg, skipping`);
-            index++;
-
-            // If we've already successfully loaded at least one image and hit 3 errors,
-            // assume we're done with this letter
-            if (index > 3 && consecutiveErrors >= 3) {
-              console.log(`Finished loading examples for ${letter}`);
-              break;
-            }
-          }
-        }
-      }
-
-      console.log(
-        `All example images loaded successfully (${totalProcessed} total)`,
-      );
-      console.log("Example counts:", knnClassifier.getCount());
-      setExamplesLoaded(true);
-      setIsClassifierReady(true);
-      setIsLoading(false);
-      setModelLoading(false);
-    } catch (error) {
-      console.error("Error loading example images:", error);
-      setIsLoading(false);
-      setModelLoading(false);
-    }
-  };
-
-  // Function to load an image and add it to the classifier
-  const loadImageForClassifier = (
-    imagePath: string,
-    letterLabel: string,
-    featureExtractor: FeatureExtractor,
-    knnClassifier: KNNClassifier,
-  ): Promise<void> => {
-    return new Promise<void>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        try {
-          // Extract features from the image
-          const features = featureExtractor.infer(img);
-          // Add the features to the classifier with the letter as the label
-          knnClassifier.addExample(features, letterLabel);
-          console.log(`Loaded: ${imagePath} as ${letterLabel}`);
-          resolve();
-        } catch (err) {
-          console.error(`Error processing image ${imagePath}:`, err);
-          reject(err);
-        }
-      };
-      img.onerror = () => {
-        reject(new Error(`Failed to load image ${imagePath}`));
-      };
-      img.src = imagePath;
-    });
-  };
 
   const playSound = async (): Promise<void> => {
     if (isGameComplete) return;
@@ -322,7 +172,7 @@ const WritingTestPage: React.FC = () => {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [result, currentRound, rounds.length]);
+  }, [result, currentRound, rounds.length, dispatch]);
 
   const initCanvas = (): void => {
     const canvas = canvasRef.current;
@@ -440,187 +290,35 @@ const WritingTestPage: React.FC = () => {
     link.click();
   };
 
-  // Helper function to process the classification result
-  const processClassificationResult = (result: KNNClassifierResult): void => {
-    const targetLetter = rounds[currentRound].letter;
-    const confidences = result.confidencesByLabel || {};
-    const targetConfidence = confidences[targetLetter] || 0;
-
-    // Get best match
-    let bestMatch = { letter: "", confidence: 0 };
-    Object.entries(confidences).forEach(([letter, confidence]) => {
-      if (confidence > bestMatch.confidence) {
-        bestMatch = { letter, confidence: confidence };
-      }
-    });
-
-    console.log(
-      `Target: ${targetLetter}, Best match: ${bestMatch.letter} (${bestMatch.confidence.toFixed(2)})`,
-    );
-
-    const isCorrect = targetConfidence > 0.4;
-
-    setResult(isCorrect ? "correct" : "incorrect");
-    if (isCorrect) {
-      dispatch(playCorrectSound());
-      setScore((prev) => prev + 1);
-      setTotalCorrect((prev) => prev + 1);
-      setShowSaveButton(false);
-    } else {
-      dispatch(playIncorrectSound());
-      setScore(0);
-      setShowSaveButton(true);
-    }
-    setIsLoading(false);
-  };
-
   const checkDrawing = async (): Promise<void> => {
-    if (!classifier || !isClassifierReady || !examplesLoaded) return;
+    if (!ml5Handler.isInitialized() || !ml5Handler.isExamplesLoaded()) return;
     setIsLoading(true);
 
     try {
       const canvas = canvasRef.current;
       if (!canvas) throw new Error("Canvas not found");
 
-      // Preprocess the image
-      const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = 224;
-      tempCanvas.height = 224;
-      const tempCtx = tempCanvas.getContext("2d");
-      if (!tempCtx) throw new Error("Could not create temp canvas context");
-
-      // Fill white background
-      tempCtx.fillStyle = "white";
-      tempCtx.fillRect(0, 0, 224, 224);
-
-      // Process image boundaries and center it
-      const originalCtx = canvas.getContext("2d");
-      if (!originalCtx) throw new Error("Could not get canvas context");
-      const pixels = originalCtx.getImageData(
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
-
-      // Find drawing boundaries
-      let minX = canvas.width,
-        maxX = 0,
-        minY = canvas.height,
-        maxY = 0;
-      let hasDrawing = false;
-
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const i = (y * canvas.width + x) * 4;
-          if (pixels.data[i + 3] > 0 && pixels.data[i] < 250) {
-            hasDrawing = true;
-            minX = Math.min(minX, x);
-            maxX = Math.max(maxX, x);
-            minY = Math.min(minY, y);
-            maxY = Math.max(maxY, y);
-          }
-        }
-      }
-
-      if (!hasDrawing) {
-        console.log("No drawing detected");
-        setResult("incorrect");
-        setIsLoading(false);
-        return;
-      }
-
-      // Add padding and center the drawing
-      const padding = 20;
-      minX = Math.max(0, minX - padding);
-      minY = Math.max(0, minY - padding);
-      maxX = Math.min(canvas.width, maxX + padding);
-      maxY = Math.min(canvas.height, maxY + padding);
-
-      const drawingWidth = maxX - minX;
-      const drawingHeight = maxY - minY;
-      const size = Math.max(drawingWidth, drawingHeight);
-      const scale = Math.min(180 / size, 1);
-      const centerX = 112 - (drawingWidth / 2) * scale;
-      const centerY = 112 - (drawingHeight / 2) * scale;
-
-      tempCtx.drawImage(
+      const isCorrect = await ml5Handler.analyzeDrawing(
         canvas,
-        minX,
-        minY,
-        drawingWidth,
-        drawingHeight,
-        centerX,
-        centerY,
-        drawingWidth * scale,
-        drawingHeight * scale,
+        rounds[currentRound].letter,
       );
 
-      // Classify with original k value (default is 3)
-      const dataURL = tempCanvas.toDataURL("image/jpeg", 1.0);
-      const img = new Image();
-      img.onload = () => {
-        const features = classifier.featureExtractor.infer(img);
+      setResult(isCorrect ? "correct" : "incorrect");
 
-        // First try with k=3 (default)
-        classifier.knn.classify(
-          features,
-          { k: 5 }, // Explicitly set k=3
-          (error: Error | null, result?: KNNClassifierResult) => {
-            if (error || !result) {
-              setResult("incorrect");
-              setIsLoading(false);
-              return;
-            }
-
-            console.log("Result with k=3:", result);
-            const confidences = result.confidencesByLabel || {};
-            const targetLetter = rounds[currentRound].letter;
-
-            // Check if there's a tie (multiple letters with same confidence)
-            const confidenceValues = Object.values(confidences);
-            const uniqueConfidences = new Set(confidenceValues).size;
-            const targetConfidence = confidences[targetLetter] || 0;
-
-            // If there's a tie and the target letter has some confidence, try with k=1
-            if (
-              uniqueConfidences < Object.keys(confidences).length &&
-              confidenceValues.some(
-                (v) => Math.abs(v - targetConfidence) < 0.001,
-              ) &&
-              targetConfidence > 0
-            ) {
-              console.log(
-                "Possible tie detected. Trying with k=1 for tie-breaking",
-              );
-
-              // Try again with k=1 to break the tie
-              classifier.knn.classify(
-                features,
-                { k: 1 }, // Use k=1 for tie-breaking
-                (error2: Error | null, result2?: KNNClassifierResult) => {
-                  if (error2 || !result2) {
-                    // Fall back to original result
-                    processClassificationResult(result);
-                    return;
-                  }
-
-                  console.log("Result with k=1:", result2);
-                  processClassificationResult(result2);
-                },
-              );
-            } else {
-              // No tie, or target letter not in tie, use the initial result
-              processClassificationResult(result);
-            }
-          },
-        );
-      };
-
-      img.src = dataURL;
+      if (isCorrect) {
+        dispatch(playCorrectSound());
+        setScore((prev) => prev + 1);
+        setTotalCorrect((prev) => prev + 1);
+        setShowSaveButton(false);
+      } else {
+        dispatch(playIncorrectSound());
+        setScore(0);
+        setShowSaveButton(true);
+      }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error checking drawing:", error);
       setResult("incorrect");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -801,9 +499,9 @@ const WritingTestPage: React.FC = () => {
 
             <button
               onClick={checkDrawing}
-              disabled={isLoading || !isClassifierReady}
+              disabled={isLoading || !examplesLoaded}
               className={`relative w-full rounded-full border-b-6 p-4 font-semibold text-white transition-colors duration-200 ${
-                isLoading || !isClassifierReady
+                isLoading || !examplesLoaded
                   ? "cursor-not-allowed border-gray-400 bg-gray-300"
                   : "border-blue-800 bg-blue-500 hover:bg-blue-600"
               }`}
@@ -839,7 +537,7 @@ const WritingTestPage: React.FC = () => {
               <span>
                 {isLoading
                   ? "Procesando..."
-                  : !isClassifierReady
+                  : !examplesLoaded
                     ? "Cargando modelo..."
                     : "Comprobar"}
               </span>
