@@ -9,6 +9,12 @@ import {
   playEndSound,
 } from "../../store/features/audioSlice";
 import { ml5Handler } from "../../utils/ml5Handler";
+import { chatgptHandler } from "../../utils/chatGPTHandler";
+
+// Choose which handler to use: 'ml5' or 'chatgpt'
+
+type RecognitionHandlerType = "ml5" | "chatgpt";
+const RECOGNITION_HANDLER: RecognitionHandlerType = "ml5";
 
 interface SpanishLetter {
   letter: string;
@@ -70,29 +76,46 @@ const WritingTestPage: React.FC = () => {
   const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
 
   useEffect(() => {
-    const initializeML5 = async (): Promise<void> => {
+    const initializeHandlers = async (): Promise<void> => {
       try {
         setModelLoading(true);
+
+        // Initialize ML5 handler
         await ml5Handler.initialize();
 
-        // Add this check
-        const checkExamples = () => {
-          if (ml5Handler.isExamplesLoaded()) {
+        // Also initialize ChatGPT handler if needed
+        if ((RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt") {
+          try {
+            await chatgptHandler.initialize();
+            // ChatGPT handler doesn't need examples
             setExamplesLoaded(true);
-            setModelLoading(false);
-          } else {
-            setTimeout(checkExamples, 500);
+          } catch (error) {
+            console.error("Error initializing ChatGPT handler:", error);
           }
-        };
+        }
 
-        checkExamples();
+        // Check ML5 examples if using ML5
+        if (RECOGNITION_HANDLER === "ml5") {
+          const checkExamples = () => {
+            if (ml5Handler.isExamplesLoaded()) {
+              setExamplesLoaded(true);
+              setModelLoading(false);
+            } else {
+              setTimeout(checkExamples, 500);
+            }
+          };
+          checkExamples();
+        } else {
+          // If using ChatGPT, we don't need to wait for examples
+          setModelLoading(false);
+        }
       } catch (error) {
-        console.error("Error initializing ML5:", error);
+        console.error("Error initializing handlers:", error);
         setModelLoading(false);
       }
     };
 
-    initializeML5();
+    initializeHandlers();
   }, []);
 
   const polly = new PollyClient({
@@ -102,22 +125,6 @@ const WritingTestPage: React.FC = () => {
       secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || "",
     },
   });
-
-  // Initialize ML5 handler
-  useEffect(() => {
-    const initializeML5 = async (): Promise<void> => {
-      try {
-        setModelLoading(true);
-        await ml5Handler.initialize();
-        setModelLoading(false);
-      } catch (error) {
-        console.error("Error initializing ML5:", error);
-        setModelLoading(false);
-      }
-    };
-
-    initializeML5();
-  }, []);
 
   const playSound = async (): Promise<void> => {
     if (isGameComplete) return;
@@ -291,14 +298,25 @@ const WritingTestPage: React.FC = () => {
   };
 
   const checkDrawing = async (): Promise<void> => {
-    if (!ml5Handler.isInitialized() || !ml5Handler.isExamplesLoaded()) return;
+    // Determine which handler to use
+    const handler =
+      (RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt"
+        ? chatgptHandler
+        : ml5Handler;
+
+    // Check if the handler is initialized
+    if (!handler.isInitialized()) return;
+
+    // If using ML5, we need to check if examples are loaded
+    if (RECOGNITION_HANDLER === "ml5" && !ml5Handler.isExamplesLoaded()) return;
+
     setIsLoading(true);
 
     try {
       const canvas = canvasRef.current;
       if (!canvas) throw new Error("Canvas not found");
 
-      const isCorrect = await ml5Handler.analyzeDrawing(
+      const isCorrect = await handler.analyzeDrawing(
         canvas,
         rounds[currentRound].letter,
       );
@@ -409,6 +427,12 @@ const WritingTestPage: React.FC = () => {
               <div className="mb-1 flex w-full max-w-md items-center justify-between">
                 <div className="text-xs font-bold text-blue-800">
                   {score} SEGUIDAS
+                </div>
+                {/* Small indicator for the handler being used */}
+                <div className="text-xs text-gray-400">
+                  {(RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt"
+                    ? "GPT"
+                    : "ML5"}
                 </div>
               </div>
 
