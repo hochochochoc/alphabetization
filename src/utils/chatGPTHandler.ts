@@ -77,12 +77,12 @@ export class ChatGPTHandler {
           Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-4-vision-preview",
+          model: "gpt-4o",
           messages: [
             {
               role: "system",
               content:
-                "You are analyzing handwritten Spanish letters. Your task is to identify if the image shows the specified letter from the Spanish alphabet (including special characters like Ñ and digraphs like LL). Be strict in your evaluation - the letter must be clearly recognizable.",
+                "You are analyzing handwritten Spanish letters. Your task is to identify if the image shows the specified letter from the Spanish alphabet (including special characters like Ñ and digraphs like LL). Don't be strict in your evaluation - the letter must be clearly recognizable.",
             },
             {
               role: "user",

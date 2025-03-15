@@ -14,7 +14,7 @@ import { chatgptHandler } from "../../utils/chatGPTHandler";
 // Choose which handler to use: 'ml5' or 'chatgpt'
 
 type RecognitionHandlerType = "ml5" | "chatgpt";
-const RECOGNITION_HANDLER: RecognitionHandlerType = "ml5";
+const RECOGNITION_HANDLER: RecognitionHandlerType = "chatgpt";
 
 interface SpanishLetter {
   letter: string;
@@ -80,22 +80,24 @@ const WritingTestPage: React.FC = () => {
       try {
         setModelLoading(true);
 
-        // Initialize ML5 handler
-        await ml5Handler.initialize();
-
-        // Also initialize ChatGPT handler if needed
-        if ((RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt") {
+        // Initialize only the appropriate handler based on the setting
+        if (RECOGNITION_HANDLER === "chatgpt") {
+          console.log("Initializing ChatGPT handler only");
           try {
             await chatgptHandler.initialize();
             // ChatGPT handler doesn't need examples
             setExamplesLoaded(true);
+            setModelLoading(false);
           } catch (error) {
             console.error("Error initializing ChatGPT handler:", error);
+            setModelLoading(false);
           }
-        }
+        } else {
+          // Initialize ML5 handler
+          console.log("Initializing ML5 handler");
+          await ml5Handler.initialize();
 
-        // Check ML5 examples if using ML5
-        if (RECOGNITION_HANDLER === "ml5") {
+          // Check ML5 examples if using ML5
           const checkExamples = () => {
             if (ml5Handler.isExamplesLoaded()) {
               setExamplesLoaded(true);
@@ -105,9 +107,6 @@ const WritingTestPage: React.FC = () => {
             }
           };
           checkExamples();
-        } else {
-          // If using ChatGPT, we don't need to wait for examples
-          setModelLoading(false);
         }
       } catch (error) {
         console.error("Error initializing handlers:", error);
@@ -308,7 +307,11 @@ const WritingTestPage: React.FC = () => {
     if (!handler.isInitialized()) return;
 
     // If using ML5, we need to check if examples are loaded
-    if (RECOGNITION_HANDLER === "ml5" && !ml5Handler.isExamplesLoaded()) return;
+    if (
+      (RECOGNITION_HANDLER as RecognitionHandlerType) === "ml5" &&
+      !ml5Handler.isExamplesLoaded()
+    )
+      return;
 
     setIsLoading(true);
 
@@ -429,11 +432,11 @@ const WritingTestPage: React.FC = () => {
                   {score} SEGUIDAS
                 </div>
                 {/* Small indicator for the handler being used */}
-                <div className="text-xs text-gray-400">
+                {/*<div className="text-xs text-gray-400">
                   {(RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt"
                     ? "GPT"
                     : "ML5"}
-                </div>
+                </div>*/}
               </div>
 
               <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-blue-200">
