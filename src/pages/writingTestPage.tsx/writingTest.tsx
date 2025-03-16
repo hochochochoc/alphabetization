@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Volume2, ArrowLeft, Eraser, Download } from "lucide-react";
+import { Volume2, ArrowLeft, Eraser } from "lucide-react";
 import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../store/hooks";
@@ -65,7 +65,7 @@ const WritingTestPage: React.FC = () => {
   const [isGameComplete, setIsGameComplete] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [modelLoading, setModelLoading] = useState<boolean>(true);
-  const [showSaveButton, setShowSaveButton] = useState<boolean>(false);
+  // const [showSaveButton, setShowSaveButton] = useState<boolean>(false);
   const [rounds, setRounds] = useState<SpanishLetter[]>(
     Array(8)
       .fill(null)
@@ -193,7 +193,7 @@ const WritingTestPage: React.FC = () => {
     canvas.height = rect.height;
 
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 15;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
   };
@@ -220,7 +220,7 @@ const WritingTestPage: React.FC = () => {
 
   const startDrawing = (e: React.TouchEvent | React.MouseEvent): void => {
     setIsDrawing(true);
-    setShowSaveButton(false);
+    // setShowSaveButton(false);
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -269,32 +269,32 @@ const WritingTestPage: React.FC = () => {
     setIsDrawing(false);
   };
 
-  const saveDrawing = (): void => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // const saveDrawing = (): void => {
+  //   const canvas = canvasRef.current;
+  //   if (!canvas) return;
 
-    // Create a temporary canvas with white background
-    const tempCanvas = document.createElement("canvas");
-    const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) return;
+  //   // Create a temporary canvas with white background
+  //   const tempCanvas = document.createElement("canvas");
+  //   const tempCtx = tempCanvas.getContext("2d");
+  //   if (!tempCtx) return;
 
-    // Match dimensions of original canvas
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
+  //   // Match dimensions of original canvas
+  //   tempCanvas.width = canvas.width;
+  //   tempCanvas.height = canvas.height;
 
-    // Fill with white background
-    tempCtx.fillStyle = "white";
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+  //   // Fill with white background
+  //   tempCtx.fillStyle = "white";
+  //   tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Draw the original canvas content on top
-    tempCtx.drawImage(canvas, 0, 0);
+  //   // Draw the original canvas content on top
+  //   tempCtx.drawImage(canvas, 0, 0);
 
-    // Create a link element to trigger download
-    const link = document.createElement("a");
-    link.download = `${rounds[currentRound].letter}.jpg`;
-    link.href = tempCanvas.toDataURL("image/jpeg", 0.9);
-    link.click();
-  };
+  //   // Create a link element to trigger download
+  //   const link = document.createElement("a");
+  //   link.download = `${rounds[currentRound].letter}.jpg`;
+  //   link.href = tempCanvas.toDataURL("image/jpeg", 0.9);
+  //   link.click();
+  // };
 
   const checkDrawing = async (): Promise<void> => {
     // Determine which handler to use
@@ -330,11 +330,11 @@ const WritingTestPage: React.FC = () => {
         dispatch(playCorrectSound());
         setScore((prev) => prev + 1);
         setTotalCorrect((prev) => prev + 1);
-        setShowSaveButton(false);
+        // setShowSaveButton(false);
       } else {
         dispatch(playIncorrectSound());
         setScore(0);
-        setShowSaveButton(true);
+        // setShowSaveButton(true);
       }
     } catch (error) {
       console.error("Error checking drawing:", error);
@@ -368,7 +368,7 @@ const WritingTestPage: React.FC = () => {
               setScore(0);
               setTotalCorrect(0);
               setIsGameComplete(false);
-              setShowSaveButton(false);
+              // setShowSaveButton(false);
               setRounds(
                 Array(8)
                   .fill(null)
@@ -511,7 +511,7 @@ const WritingTestPage: React.FC = () => {
               </button>
 
               {/* Download button */}
-              {showSaveButton && (
+              {/* {showSaveButton && (
                 <div className="absolute right-4 bottom-4 animate-[fadeIn_0.3s_ease-in-out]">
                   <button
                     onClick={saveDrawing}
@@ -521,7 +521,7 @@ const WritingTestPage: React.FC = () => {
                     <span>Guardar</span>
                   </button>
                 </div>
-              )}
+              )} */}
             </div>
 
             <button
