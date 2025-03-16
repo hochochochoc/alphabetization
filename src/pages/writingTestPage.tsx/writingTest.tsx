@@ -8,13 +8,7 @@ import {
   playIncorrectSound,
   playEndSound,
 } from "../../store/features/audioSlice";
-import { ml5Handler } from "../../utils/ml5Handler";
 import { chatgptHandler } from "../../utils/chatGPTHandler";
-
-// Choose which handler to use: 'ml5' or 'chatgpt'
-
-type RecognitionHandlerType = "ml5" | "chatgpt";
-const RECOGNITION_HANDLER: RecognitionHandlerType = "chatgpt";
 
 interface SpanishLetter {
   letter: string;
@@ -26,23 +20,23 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
   { letter: "C", voice: "ce" },
-  // { letter: "D", voice: "de" },
+  { letter: "D", voice: "de" },
   { letter: "E", voice: "E" },
   { letter: "F", voice: "efe" },
-  // { letter: "G", voice: "ge" },
-  // { letter: "H", voice: "hache" },
-  // { letter: "I", voice: "i" },
-  // { letter: "J", voice: "jota" },
+  { letter: "G", voice: "ge" },
+  { letter: "H", voice: "hache" },
+  { letter: "I", voice: "i" },
+  { letter: "J", voice: "jota" },
   { letter: "K", voice: "ka" },
   { letter: "L", voice: "ele" },
-  // { letter: "LL", voice: "eyye" },
+  { letter: "LL", voice: "eyye" },
   { letter: "M", voice: "eme" },
-  // { letter: "N", voice: "ene" },
-  // { letter: "Ñ", voice: "eñe" },
+  { letter: "N", voice: "ene" },
+  { letter: "Ñ", voice: "eñe" },
   { letter: "O", voice: "o" },
-  // { letter: "P", voice: "Ppee" },
-  // { letter: "Q", voice: "cu" },
-  // { letter: "R", voice: "erre" },
+  { letter: "P", voice: "Ppee" },
+  { letter: "Q", voice: "cu" },
+  { letter: "R", voice: "erre" },
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
   { letter: "U", voice: "uhhh" },
@@ -65,7 +59,6 @@ const WritingTestPage: React.FC = () => {
   const [isGameComplete, setIsGameComplete] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [modelLoading, setModelLoading] = useState<boolean>(true);
-  // const [showSaveButton, setShowSaveButton] = useState<boolean>(false);
   const [rounds, setRounds] = useState<SpanishLetter[]>(
     Array(8)
       .fill(null)
@@ -75,46 +68,30 @@ const WritingTestPage: React.FC = () => {
   );
   const [examplesLoaded, setExamplesLoaded] = useState<boolean>(false);
 
+  // Constant for drawing line width
+  const LINE_WIDTH = 8;
+
   useEffect(() => {
-    const initializeHandlers = async (): Promise<void> => {
+    const initializeHandler = async (): Promise<void> => {
       try {
         setModelLoading(true);
+        console.log("Initializing ChatGPT handler");
 
-        // Initialize only the appropriate handler based on the setting
-        if (RECOGNITION_HANDLER === "chatgpt") {
-          console.log("Initializing ChatGPT handler only");
-          try {
-            await chatgptHandler.initialize();
-            // ChatGPT handler doesn't need examples
-            setExamplesLoaded(true);
-            setModelLoading(false);
-          } catch (error) {
-            console.error("Error initializing ChatGPT handler:", error);
-            setModelLoading(false);
-          }
-        } else {
-          // Initialize ML5 handler
-          console.log("Initializing ML5 handler");
-          await ml5Handler.initialize();
-
-          // Check ML5 examples if using ML5
-          const checkExamples = () => {
-            if (ml5Handler.isExamplesLoaded()) {
-              setExamplesLoaded(true);
-              setModelLoading(false);
-            } else {
-              setTimeout(checkExamples, 500);
-            }
-          };
-          checkExamples();
+        try {
+          await chatgptHandler.initialize();
+          setExamplesLoaded(true);
+          setModelLoading(false);
+        } catch (error) {
+          console.error("Error initializing ChatGPT handler:", error);
+          setModelLoading(false);
         }
       } catch (error) {
-        console.error("Error initializing handlers:", error);
+        console.error("Error initializing handler:", error);
         setModelLoading(false);
       }
     };
 
-    initializeHandlers();
+    initializeHandler();
   }, []);
 
   const polly = new PollyClient({
@@ -180,22 +157,38 @@ const WritingTestPage: React.FC = () => {
     }
   }, [result, currentRound, rounds.length, dispatch]);
 
+  // Function to set up context properties
+  const setupContext = (): CanvasRenderingContext2D | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    // Set the drawing properties
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = LINE_WIDTH;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    return ctx;
+  };
+
+  // Initialize canvas with proper dimensions and context
   const initCanvas = (): void => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
     const rect = canvas.getBoundingClientRect();
 
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    // Only set dimensions if they've changed to avoid resetting the canvas
+    if (canvas.width !== rect.width || canvas.height !== rect.height) {
+      canvas.width = rect.width;
+      canvas.height = rect.height;
 
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 15;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+      // Setup context after dimensions change
+      setupContext();
+    }
   };
 
   useEffect(() => {
@@ -205,9 +198,15 @@ const WritingTestPage: React.FC = () => {
       // Disable default touch behavior for the entire canvas
       canvas.style.touchAction = "none";
     }
-    window.addEventListener("resize", initCanvas);
+
+    // Handle resize events
+    const handleResize = () => {
+      initCanvas();
+    };
+
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener("resize", initCanvas);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -215,16 +214,23 @@ const WritingTestPage: React.FC = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!ctx || !canvas) return;
+
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Restore context properties after clearing
+    setupContext();
   };
 
   const startDrawing = (e: React.TouchEvent | React.MouseEvent): void => {
     setIsDrawing(true);
-    // setShowSaveButton(false);
 
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx || !canvas) return;
+    if (!canvas) return;
+
+    // Ensure context is properly set up
+    const ctx = setupContext();
+    if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
     const x =
@@ -249,6 +255,11 @@ const WritingTestPage: React.FC = () => {
     const ctx = canvas?.getContext("2d");
     if (!ctx || !canvas) return;
 
+    // Ensure lineWidth is set properly
+    if (ctx.lineWidth !== LINE_WIDTH) {
+      ctx.lineWidth = LINE_WIDTH;
+    }
+
     const rect = canvas.getBoundingClientRect();
     const x =
       "touches" in e
@@ -269,49 +280,9 @@ const WritingTestPage: React.FC = () => {
     setIsDrawing(false);
   };
 
-  // const saveDrawing = (): void => {
-  //   const canvas = canvasRef.current;
-  //   if (!canvas) return;
-
-  //   // Create a temporary canvas with white background
-  //   const tempCanvas = document.createElement("canvas");
-  //   const tempCtx = tempCanvas.getContext("2d");
-  //   if (!tempCtx) return;
-
-  //   // Match dimensions of original canvas
-  //   tempCanvas.width = canvas.width;
-  //   tempCanvas.height = canvas.height;
-
-  //   // Fill with white background
-  //   tempCtx.fillStyle = "white";
-  //   tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-  //   // Draw the original canvas content on top
-  //   tempCtx.drawImage(canvas, 0, 0);
-
-  //   // Create a link element to trigger download
-  //   const link = document.createElement("a");
-  //   link.download = `${rounds[currentRound].letter}.jpg`;
-  //   link.href = tempCanvas.toDataURL("image/jpeg", 0.9);
-  //   link.click();
-  // };
-
   const checkDrawing = async (): Promise<void> => {
-    // Determine which handler to use
-    const handler =
-      (RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt"
-        ? chatgptHandler
-        : ml5Handler;
-
     // Check if the handler is initialized
-    if (!handler.isInitialized()) return;
-
-    // If using ML5, we need to check if examples are loaded
-    if (
-      (RECOGNITION_HANDLER as RecognitionHandlerType) === "ml5" &&
-      !ml5Handler.isExamplesLoaded()
-    )
-      return;
+    if (!chatgptHandler.isInitialized()) return;
 
     setIsLoading(true);
 
@@ -319,7 +290,7 @@ const WritingTestPage: React.FC = () => {
       const canvas = canvasRef.current;
       if (!canvas) throw new Error("Canvas not found");
 
-      const isCorrect = await handler.analyzeDrawing(
+      const isCorrect = await chatgptHandler.analyzeDrawing(
         canvas,
         rounds[currentRound].letter,
       );
@@ -330,11 +301,9 @@ const WritingTestPage: React.FC = () => {
         dispatch(playCorrectSound());
         setScore((prev) => prev + 1);
         setTotalCorrect((prev) => prev + 1);
-        // setShowSaveButton(false);
       } else {
         dispatch(playIncorrectSound());
         setScore(0);
-        // setShowSaveButton(true);
       }
     } catch (error) {
       console.error("Error checking drawing:", error);
@@ -368,7 +337,6 @@ const WritingTestPage: React.FC = () => {
               setScore(0);
               setTotalCorrect(0);
               setIsGameComplete(false);
-              // setShowSaveButton(false);
               setRounds(
                 Array(8)
                   .fill(null)
@@ -431,12 +399,6 @@ const WritingTestPage: React.FC = () => {
                 <div className="text-xs font-bold text-blue-800">
                   {score} SEGUIDAS
                 </div>
-                {/* Small indicator for the handler being used */}
-                {/*<div className="text-xs text-gray-400">
-                  {(RECOGNITION_HANDLER as RecognitionHandlerType) === "chatgpt"
-                    ? "GPT"
-                    : "ML5"}
-                </div>*/}
               </div>
 
               <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-blue-200">
@@ -509,19 +471,6 @@ const WritingTestPage: React.FC = () => {
               >
                 <Eraser className="h-6 w-6 text-gray-600" />
               </button>
-
-              {/* Download button */}
-              {/* {showSaveButton && (
-                <div className="absolute right-4 bottom-4 animate-[fadeIn_0.3s_ease-in-out]">
-                  <button
-                    onClick={saveDrawing}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2 font-medium text-white shadow-lg hover:bg-blue-600"
-                  >
-                    <Download size={18} />
-                    <span>Guardar</span>
-                  </button>
-                </div>
-              )} */}
             </div>
 
             <button
