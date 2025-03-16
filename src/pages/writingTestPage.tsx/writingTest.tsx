@@ -20,23 +20,23 @@ const spanishLetters: SpanishLetter[] = [
   { letter: "A", voice: "A" },
   { letter: "B", voice: "be" },
   { letter: "C", voice: "ce" },
-  { letter: "D", voice: "de" },
+  // { letter: "D", voice: "de" },
   { letter: "E", voice: "E" },
   { letter: "F", voice: "efe" },
-  { letter: "G", voice: "ge" },
-  { letter: "H", voice: "hache" },
-  { letter: "I", voice: "i" },
-  { letter: "J", voice: "jota" },
+  // { letter: "G", voice: "ge" },
+  // { letter: "H", voice: "hache" },
+  // { letter: "I", voice: "i" },
+  // { letter: "J", voice: "jota" },
   { letter: "K", voice: "ka" },
   { letter: "L", voice: "ele" },
-  { letter: "LL", voice: "eyye" },
+  // { letter: "LL", voice: "eyye" },
   { letter: "M", voice: "eme" },
-  { letter: "N", voice: "ene" },
-  { letter: "Ñ", voice: "eñe" },
+  // { letter: "N", voice: "ene" },
+  // { letter: "Ñ", voice: "eñe" },
   { letter: "O", voice: "o" },
-  { letter: "P", voice: "Ppee" },
-  { letter: "Q", voice: "cu" },
-  { letter: "R", voice: "erre" },
+  // { letter: "P", voice: "Ppee" },
+  // { letter: "Q", voice: "cu" },
+  // { letter: "R", voice: "erre" },
   { letter: "S", voice: "ese" },
   { letter: "T", voice: "te" },
   { letter: "U", voice: "uhhh" },
@@ -181,18 +181,26 @@ const WritingTestPage: React.FC = () => {
 
     const rect = canvas.getBoundingClientRect();
 
-    // Only set dimensions if they've changed to avoid resetting the canvas
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+    // Always set dimensions to ensure proper scaling
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
-      // Setup context after dimensions change
-      setupContext();
+    // Get a fresh context and set it up
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = LINE_WIDTH;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
     }
   };
 
   useEffect(() => {
-    initCanvas();
+    // Initialize canvas with a small delay to ensure proper rendering
+    setTimeout(() => {
+      initCanvas();
+    }, 100);
+
     const canvas = canvasRef.current;
     if (canvas) {
       // Disable default touch behavior for the entire canvas
@@ -212,14 +220,20 @@ const WritingTestPage: React.FC = () => {
 
   const clearCanvas = (): void => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx || !canvas) return;
+    if (!canvas) return;
+
+    // Get a fresh context after clearing
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Restore context properties after clearing
-    setupContext();
+    // Explicitly reset all drawing properties
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = LINE_WIDTH;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
   };
 
   const startDrawing = (e: React.TouchEvent | React.MouseEvent): void => {
@@ -255,10 +269,8 @@ const WritingTestPage: React.FC = () => {
     const ctx = canvas?.getContext("2d");
     if (!ctx || !canvas) return;
 
-    // Ensure lineWidth is set properly
-    if (ctx.lineWidth !== LINE_WIDTH) {
-      ctx.lineWidth = LINE_WIDTH;
-    }
+    // Always set the lineWidth to ensure consistency
+    ctx.lineWidth = LINE_WIDTH;
 
     const rect = canvas.getBoundingClientRect();
     const x =
