@@ -1,56 +1,42 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Mic } from "lucide-react";
-
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../../store/hooks";
+import {
+  playCorrectSound,
+  playIncorrectSound,
+} from "../../store/features/audioSlice";
 
-const LETTER_PRONUNCIATIONS = {
-  A: /^(ah?|ey?)$/i,
-  B: /^(beh?)$/i,
-  C: /^(seh?)$/i,
-  D: /^(deh?)$/i,
-  E: /^(eh?)$/i,
-  F: /^(eh?feh?|f)$/i,
-  G: /^(heh?)$/i,
-  H: /^(ah?cheh?|h)$/i,
-  K: /^(kah?)$/i,
-  L: /^(eh?leh?)$/i,
-  LL: /^(eh?yeh?)$/i,
-  M: /^(eh?meh?)$/i,
-  N: /^(eh?neh?)$/i,
-  P: /^(peh?)$/i,
-  R: /^(eh?reh?|r)$/i,
-  S: /^(eh?seh?)$/i,
-  T: /^(teh?)$/i,
-  V: /^(oo?veh?)$/i,
-  W: /^(oo?veh? doh?bleh?|w)$/i,
-  X: /^(eh?kees|x)$/i,
-  Y: /^(ee?gree?eh?gah?|y)$/i,
-  Z: /^(seh?tah?|z)$/i,
-};
-
+// Spanish alphabet letters with their pronunciation
 const spanishLetters = [
-  //   { letter: "A", voice: "A" },
-  //   { letter: "B", voice: "be" },
-  //   { letter: "C", voice: "ce" },
-  //   { letter: "D", voice: "de" },
-  //   { letter: "E", voice: "E" },
-  { letter: "F", voice: "efe" },
-  //   { letter: "G", voice: "ge" },
+  // { letter: "A", voice: "a" },
+  // { letter: "B", voice: "be" },
+  // { letter: "C", voice: "ce" },
+  // { letter: "D", voice: "de" },
+  // { letter: "E", voice: "e" },
+  // { letter: "F", voice: "efe" },
+  // { letter: "G", voice: "ge" },
   { letter: "H", voice: "hache" },
-  //   { letter: "K", voice: "ka" },
-  //   { letter: "L", voice: "ele" },
-  //   { letter: "LL", voice: "eyye" },
-  //   { letter: "M", voice: "eme" },
-  //   { letter: "N", voice: "ene" },
-  //   { letter: "P", voice: "pe" },
+  // { letter: "I", voice: "i" },
+  // { letter: "J", voice: "jota" },
+  // { letter: "K", voice: "ka" },
+  // { letter: "L", voice: "ele" },
+  { letter: "LL", voice: "elle" },
+  // { letter: "M", voice: "eme" },
+  // { letter: "N", voice: "ene" },
+  // { letter: "Ñ", voice: "eñe" },
+  // { letter: "O", voice: "o" },
+  // { letter: "P", voice: "pe" },
+  // { letter: "Q", voice: "cu" },
   { letter: "R", voice: "erre" },
-  //   { letter: "S", voice: "ese" },
-  //   { letter: "T", voice: "te" },
-  //   { letter: "V", voice: "uve" },
+  // { letter: "S", voice: "ese" },
+  // { letter: "T", voice: "te" },
+  // { letter: "U", voice: "u" },
+  // { letter: "V", voice: "uve" },
   { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
-  { letter: "Y", voice: "i griega" },
-  { letter: "Z", voice: "zeta" },
+  // { letter: "Y", voice: "i griega" },
+  // { letter: "Z", voice: "zeta" },
 ];
 
 const MIN_RECORDING_TIME = 500;
@@ -58,6 +44,7 @@ const MAX_RECORDING_TIME = 5000;
 
 const ReadingTestPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [isRecording, setIsRecording] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
   const [score, setScore] = useState(0);
@@ -65,20 +52,33 @@ const ReadingTestPage = () => {
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [transcript, setTranscript] = useState<string>("");
+
+  const [speechRecognitionSupported, setSpeechRecognitionSupported] =
+    useState<boolean>(true);
 
   const recognitionRef = useRef<any>(null);
   const recordingStartTimeRef = useRef<number | null>(null);
   const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [rounds, setRounds] = useState(
-    Array(8)
+  // Generate a fixed set of rounds rather than regenerating every render
+  const generateRounds = () => {
+    return Array(8)
       .fill(null)
       .map(
         () => spanishLetters[Math.floor(Math.random() * spanishLetters.length)],
-      ),
-  );
+      );
+  };
 
+  const [rounds, setRounds] = useState(generateRounds());
+
+  // Check for speech recognition support
   useEffect(() => {
+    const hasSpeechRecognition =
+      "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
+
+    setSpeechRecognitionSupported(hasSpeechRecognition);
+
     return () => {
       // Cleanup function to stop recording when component unmounts
       if (recognitionRef.current) {
@@ -98,8 +98,21 @@ const ReadingTestPage = () => {
           if (currentRound === rounds.length - 1) {
             setIsGameComplete(true);
           } else {
-            setCurrentRound((prev) => prev + 1);
+            // Clear transcript when moving to next round
+            setTranscript("");
+            setCurrentRound((prevRound) => {
+              console.log(
+                `Advancing from round ${prevRound} to ${prevRound + 1}`,
+              );
+              return prevRound + 1;
+            });
+            // Add a short delay before allowing recording again
+            setTimeout(() => {
+              setIsLoading(false);
+            }, 500);
           }
+        } else {
+          setIsLoading(false);
         }
       }, 1000);
       return () => clearTimeout(timer);
@@ -109,36 +122,28 @@ const ReadingTestPage = () => {
   const initializeRecognition = () => {
     if (recognitionRef.current) return;
 
-    const recognition = new (window as any).webkitSpeechRecognition();
+    // Create a standard speech recognition
+    const SpeechRecognition =
+      (window as any).webkitSpeechRecognition ||
+      (window as any).SpeechRecognition;
+    const recognition = new SpeechRecognition();
     recognition.lang = "es-ES";
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
-      console.log("Detected:", transcript);
+    recognition.onresult = async (event: any) => {
+      try {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        console.log("Detected speech:", transcript);
+        setTranscript(transcript);
 
-      const currentLetter = rounds[currentRound].letter;
-      const pattern =
-        LETTER_PRONUNCIATIONS[
-          currentLetter as keyof typeof LETTER_PRONUNCIATIONS
-        ];
+        // Use direct checking for flexibility instead of ChatGPT
+        checkPronunciation(transcript);
+      } catch (error) {
+        console.error("Error processing speech result:", error);
 
-      if (!pattern) {
-        console.error("No pattern found for letter:", currentLetter);
         setResult("incorrect");
-        return;
-      }
-
-      const isCorrect = pattern.test(transcript);
-      console.log("Result:", isCorrect ? "correct" : "incorrect");
-      setResult(isCorrect ? "correct" : "incorrect");
-
-      if (isCorrect) {
-        setScore((prev) => prev + 1);
-        setTotalCorrect((prev) => prev + 1);
-      } else {
-        setScore(0);
+        setIsLoading(false);
       }
     };
 
@@ -149,17 +154,24 @@ const ReadingTestPage = () => {
 
       if (recordingDuration < MIN_RECORDING_TIME) {
         // If recording was too short, don't count it as an attempt
+        console.log("Recording too short, not counting as attempt");
         setIsRecording(false);
         setIsLoading(false);
         return;
       }
 
+      // If no result was detected, show a message
+      if (transcript === "") {
+      }
+
+      console.log("Recognition ended");
       setIsRecording(false);
-      setIsLoading(false);
       recordingStartTimeRef.current = null;
     };
 
     recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+
       if (event.error === "no-speech") {
         // Handle no speech detected differently
         console.log("No speech detected");
@@ -168,7 +180,6 @@ const ReadingTestPage = () => {
         return;
       }
 
-      console.error("Speech recognition error:", event.error);
       setResult("incorrect");
       setIsLoading(false);
     };
@@ -176,11 +187,105 @@ const ReadingTestPage = () => {
     recognitionRef.current = recognition;
   };
 
+  // This function directly checks if the transcription matches the expected letter or pronunciation
+  const checkPronunciation = (transcript: string) => {
+    try {
+      setIsLoading(true);
+
+      // Use the currentRound from state to get the current letter
+      // This will always get the current value at the time of execution
+      const current = currentRound;
+      const currentLetter = rounds[current].letter;
+      const currentPronunciation = rounds[current].voice;
+
+      // Clean and normalize the transcript
+      const cleanTranscript = transcript.trim().toLowerCase();
+
+      // Log to check what current round and letter we're on
+      console.log(
+        `Current round: ${current}, Checking letter: ${currentLetter}, Pronunciation: ${currentPronunciation}`,
+      );
+
+      // Check if the transcription is either:
+      // 1. The letter itself (e.g. "w")
+      // 2. The official pronunciation (e.g. "uve doble")
+      // 3. A close approximation of the pronunciation
+
+      const isLetterMatch = cleanTranscript === currentLetter.toLowerCase();
+      const isPronunciationMatch = cleanTranscript.includes(
+        currentPronunciation.toLowerCase(),
+      );
+
+      // Special case handling
+      let isSpecialMatch = false;
+
+      // Special cases for specific letters
+      if (currentLetter === "W") {
+        isSpecialMatch =
+          cleanTranscript.includes("doble") ||
+          cleanTranscript.includes("dobl") ||
+          cleanTranscript.includes("w");
+      } else if (currentLetter === "LL") {
+        isSpecialMatch =
+          cleanTranscript.includes("elle") ||
+          cleanTranscript.includes("eye") ||
+          cleanTranscript.includes("ll");
+      } else if (currentLetter === "Y") {
+        isSpecialMatch =
+          cleanTranscript.includes("griega") ||
+          cleanTranscript.includes("grieg") ||
+          cleanTranscript.includes("y");
+      } else if (currentLetter === "Ñ") {
+        isSpecialMatch =
+          cleanTranscript.includes("eñe") ||
+          cleanTranscript.includes("eñ") ||
+          cleanTranscript.includes("ñ");
+      }
+
+      const isCorrect = isLetterMatch || isPronunciationMatch || isSpecialMatch;
+      console.log(
+        `Checking: Letter: ${currentLetter}, Pronunciation: ${currentPronunciation}, Said: "${cleanTranscript}", Correct: ${isCorrect}`,
+      );
+
+      setResult(isCorrect ? "correct" : "incorrect");
+
+      if (isCorrect) {
+        dispatch(playCorrectSound());
+        setScore((prev) => prev + 1);
+        setTotalCorrect((prev) => prev + 1);
+      } else {
+        dispatch(playIncorrectSound());
+        setScore(0);
+      }
+    } catch (error) {
+      console.error("Error checking pronunciation:", error);
+
+      setResult("incorrect");
+      dispatch(playIncorrectSound());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // This function handles starting a recording session
   const startRecording = async (): Promise<void> => {
     if (isRecording || isLoading) return;
 
     setIsLoading(true);
+
+    if (!speechRecognitionSupported) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Reset recognition ref to ensure we get a fresh instance for each recording
+    recognitionRef.current = null;
     initializeRecognition();
+
+    if (!recognitionRef.current) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       recordingStartTimeRef.current = Date.now();
@@ -196,6 +301,7 @@ const ReadingTestPage = () => {
       }, MAX_RECORDING_TIME);
     } catch (error) {
       console.error("Error starting recognition:", error);
+
       setIsLoading(false);
       setIsRecording(false);
     }
@@ -237,6 +343,8 @@ const ReadingTestPage = () => {
     setScore(0);
     setTotalCorrect(0);
     setIsGameComplete(false);
+    setTranscript("");
+
     setRounds(
       Array(8)
         .fill(null)
@@ -315,8 +423,8 @@ const ReadingTestPage = () => {
             onMouseUp={stopRecording}
             onTouchStart={startRecording}
             onTouchEnd={stopRecording}
-            disabled={isLoading}
-            className={`flex h-32 w-32 items-center justify-center rounded-full transition-all duration-200 ${isRecording ? "bg-red-500 text-white" : "bg-blue-500 text-white hover:bg-blue-600"} ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
+            disabled={isLoading || !speechRecognitionSupported}
+            className={`flex h-32 w-32 items-center justify-center rounded-full transition-all duration-200 ${isRecording ? "bg-red-500 text-white" : "bg-blue-500 text-white hover:bg-blue-600"} ${isLoading || !speechRecognitionSupported ? "cursor-not-allowed opacity-50" : ""}`}
           >
             <Mic size={48} />
           </button>
@@ -325,7 +433,11 @@ const ReadingTestPage = () => {
         <div className="text-center text-sm text-gray-600">
           {isRecording
             ? "Suelta para terminar de grabar"
-            : "Mantén presionado para grabar"}
+            : isLoading
+              ? "Analizando pronunciación..."
+              : !speechRecognitionSupported
+                ? "Reconocimiento de voz no soportado en este navegador"
+                : "Mantén presionado para grabar"}
         </div>
       </div>
     </div>
