@@ -9,37 +9,37 @@ import {
 
 // Spanish alphabet letters with their pronunciation
 const spanishLetters = [
-  // { letter: "A", voice: "a" },
-  // { letter: "B", voice: "be" },
-  // { letter: "C", voice: "ce" },
-  // { letter: "D", voice: "de" },
-  // { letter: "E", voice: "e" },
-  // { letter: "F", voice: "efe" },
-  // { letter: "G", voice: "ge" },
+  { letter: "A", voice: "a" },
+  { letter: "B", voice: "be" },
+  { letter: "C", voice: "ce" },
+  { letter: "D", voice: "de" },
+  { letter: "E", voice: "e" },
+  { letter: "F", voice: "efe" },
+  { letter: "G", voice: "ge" },
   { letter: "H", voice: "hache" },
-  // { letter: "I", voice: "i" },
-  // { letter: "J", voice: "jota" },
-  // { letter: "K", voice: "ka" },
-  // { letter: "L", voice: "ele" },
+  { letter: "I", voice: "i" },
+  { letter: "J", voice: "jota" },
+  { letter: "K", voice: "ka" },
+  { letter: "L", voice: "ele" },
   { letter: "LL", voice: "elle" },
-  // { letter: "M", voice: "eme" },
-  // { letter: "N", voice: "ene" },
-  // { letter: "Ñ", voice: "eñe" },
-  // { letter: "O", voice: "o" },
-  // { letter: "P", voice: "pe" },
-  // { letter: "Q", voice: "cu" },
+  { letter: "M", voice: "eme" },
+  { letter: "N", voice: "ene" },
+  { letter: "Ñ", voice: "eñe" },
+  { letter: "O", voice: "o" },
+  { letter: "P", voice: "pe" },
+  { letter: "Q", voice: "cu" },
   { letter: "R", voice: "erre" },
-  // { letter: "S", voice: "ese" },
-  // { letter: "T", voice: "te" },
-  // { letter: "U", voice: "u" },
-  // { letter: "V", voice: "uve" },
+  { letter: "S", voice: "ese" },
+  { letter: "T", voice: "te" },
+  { letter: "U", voice: "u" },
+  { letter: "V", voice: "uve" },
   { letter: "W", voice: "uve doble" },
   { letter: "X", voice: "equis" },
-  // { letter: "Y", voice: "i griega" },
-  // { letter: "Z", voice: "zeta" },
+  { letter: "Y", voice: "i griega" },
+  { letter: "Z", voice: "zeta" },
 ];
 
-const MIN_RECORDING_TIME = 500;
+const MIN_RECORDING_TIME = 1500;
 const MAX_RECORDING_TIME = 5000;
 
 const ReadingTestPage = () => {
@@ -109,7 +109,7 @@ const ReadingTestPage = () => {
             // Add a short delay before allowing recording again
             setTimeout(() => {
               setIsLoading(false);
-            }, 500);
+            }, 1500);
           }
         } else {
           setIsLoading(false);
@@ -137,11 +137,50 @@ const ReadingTestPage = () => {
         console.log("Detected speech:", transcript);
         setTranscript(transcript);
 
-        // Use direct checking for flexibility instead of ChatGPT
+        // For very short transcripts that could be single letters
+        if (transcript.length <= 2) {
+          // Check if it's a direct match for the current letter
+          if (transcript === rounds[currentRound].letter.toLowerCase()) {
+            setResult("correct");
+            dispatch(playCorrectSound());
+            setScore((prev) => prev + 1);
+            setTotalCorrect((prev) => prev + 1);
+            return;
+          }
+
+          // Special handling for vowels
+          if (
+            ["a", "e", "i", "o", "u"].includes(transcript) &&
+            ["A", "E", "I", "O", "U"].includes(rounds[currentRound].letter)
+          ) {
+            setResult("correct");
+            dispatch(playCorrectSound());
+            setScore((prev) => prev + 1);
+            setTotalCorrect((prev) => prev + 1);
+            return;
+          }
+        }
+
+        // Check for phrases like "letra a", "letra b", etc.
+        if (transcript.includes("letra ")) {
+          const letterPart = transcript.split("letra ")[1]?.charAt(0);
+          if (
+            letterPart &&
+            letterPart.toLowerCase() ===
+              rounds[currentRound].letter.toLowerCase()
+          ) {
+            setResult("correct");
+            dispatch(playCorrectSound());
+            setScore((prev) => prev + 1);
+            setTotalCorrect((prev) => prev + 1);
+            return;
+          }
+        }
+
+        // Use direct checking for flexibility
         checkPronunciation(transcript);
       } catch (error) {
         console.error("Error processing speech result:", error);
-
         setResult("incorrect");
         setIsLoading(false);
       }
@@ -193,7 +232,6 @@ const ReadingTestPage = () => {
       setIsLoading(true);
 
       // Use the currentRound from state to get the current letter
-      // This will always get the current value at the time of execution
       const current = currentRound;
       const currentLetter = rounds[current].letter;
       const currentPronunciation = rounds[current].voice;
@@ -201,17 +239,18 @@ const ReadingTestPage = () => {
       // Clean and normalize the transcript
       const cleanTranscript = transcript.trim().toLowerCase();
 
-      // Log to check what current round and letter we're on
       console.log(
         `Current round: ${current}, Checking letter: ${currentLetter}, Pronunciation: ${currentPronunciation}`,
       );
 
-      // Check if the transcription is either:
-      // 1. The letter itself (e.g. "w")
-      // 2. The official pronunciation (e.g. "uve doble")
-      // 3. A close approximation of the pronunciation
+      // Check if the transcription contains the letter itself
+      const isLetterMatch =
+        cleanTranscript === currentLetter.toLowerCase() ||
+        cleanTranscript.includes(` ${currentLetter.toLowerCase()} `) ||
+        cleanTranscript.startsWith(`${currentLetter.toLowerCase()} `) ||
+        cleanTranscript.endsWith(` ${currentLetter.toLowerCase()}`);
 
-      const isLetterMatch = cleanTranscript === currentLetter.toLowerCase();
+      // Check if the transcription contains the pronunciation
       const isPronunciationMatch = cleanTranscript.includes(
         currentPronunciation.toLowerCase(),
       );
@@ -240,6 +279,96 @@ const ReadingTestPage = () => {
           cleanTranscript.includes("eñe") ||
           cleanTranscript.includes("eñ") ||
           cleanTranscript.includes("ñ");
+      } else if (
+        [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H",
+          "I",
+          "J",
+          "K",
+          "L",
+          "M",
+          "N",
+          "O",
+          "P",
+          "Q",
+          "R",
+          "S",
+          "T",
+          "U",
+          "V",
+          "X",
+          "Z",
+        ].includes(currentLetter)
+      ) {
+        // Handle basic consonants and vowels
+        // Check if transcript includes the letter name in Spanish
+        type LetterKey =
+          | "A"
+          | "B"
+          | "C"
+          | "D"
+          | "E"
+          | "F"
+          | "G"
+          | "H"
+          | "I"
+          | "J"
+          | "K"
+          | "L"
+          | "M"
+          | "N"
+          | "O"
+          | "P"
+          | "Q"
+          | "R"
+          | "S"
+          | "T"
+          | "U"
+          | "V"
+          | "X"
+          | "Z";
+
+        const letterMap: Record<LetterKey, string[]> = {
+          A: ["a"],
+          B: ["be", "b"],
+          C: ["ce", "c"],
+          D: ["de", "d"],
+          E: ["e"],
+          F: ["efe", "f"],
+          G: ["ge", "g"],
+          H: ["hache", "h"],
+          I: ["i"],
+          J: ["jota", "j"],
+          K: ["ka", "k"],
+          L: ["ele", "l"],
+          M: ["eme", "m"],
+          N: ["ene", "n"],
+          O: ["o"],
+          P: ["pe", "p"],
+          Q: ["cu", "q"],
+          R: ["erre", "r"],
+          S: ["ese", "s"],
+          T: ["te", "t"],
+          U: ["u"],
+          V: ["uve", "v"],
+          X: ["equis", "x"],
+          Z: ["zeta", "z"],
+        };
+
+        // Type assertion to tell TypeScript that currentLetter is a valid key
+        const key = currentLetter as LetterKey;
+        if (letterMap[key]) {
+          isSpecialMatch = letterMap[key].some((pronunciation: string) =>
+            cleanTranscript.includes(pronunciation),
+          );
+        }
       }
 
       const isCorrect = isLetterMatch || isPronunciationMatch || isSpecialMatch;
@@ -259,7 +388,6 @@ const ReadingTestPage = () => {
       }
     } catch (error) {
       console.error("Error checking pronunciation:", error);
-
       setResult("incorrect");
       dispatch(playIncorrectSound());
     } finally {
