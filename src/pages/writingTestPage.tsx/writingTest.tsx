@@ -317,6 +317,24 @@ const WritingTestPage: React.FC = () => {
         dispatch(playIncorrectSound());
         setScore(0);
       }
+
+      // Send session data to the server
+      try {
+        await fetch("http://localhost:3001/api/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            target_letter: rounds[currentRound].letter,
+            options: [rounds[currentRound].letter], // In writing test there are no options to choose from
+            user_answer: rounds[currentRound].letter, // The user's attempted letter is the target letter
+            correct: isCorrect,
+          }),
+        });
+      } catch (error) {
+        console.error("Error saving writing session:", error);
+      }
     } catch (error) {
       console.error("Error checking drawing:", error);
       setResult("incorrect");
