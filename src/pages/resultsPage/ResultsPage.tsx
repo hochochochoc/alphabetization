@@ -128,6 +128,24 @@ const ResultsPage = () => {
     return colorMap[color];
   };
 
+  const getDarkBorderClass = (color: ColorType): string => {
+    const colorMap = {
+      blue: "border-blue-700",
+      green: "border-green-700",
+      yellow: "border-yellow-700",
+    };
+    return colorMap[color];
+  };
+
+  const getBackgroundColorClass = (color: ColorType): string => {
+    const colorMap = {
+      blue: "bg-blue-50",
+      green: "bg-green-50",
+      yellow: "bg-yellow-50",
+    };
+    return colorMap[color];
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white p-4">
       <div className="mx-auto max-w-2xl">
@@ -145,30 +163,42 @@ const ResultsPage = () => {
         {/* Activities Progress */}
         <div className="space-y-6">
           {activities.map((activity, index) => (
-            <div key={index} className="rounded-xl bg-white p-6 shadow-md">
-              <h2 className="mb-4 text-lg font-semibold text-gray-800">
+            <div
+              key={index}
+              className={`${getBackgroundColorClass(activity.color)} rounded-xl p-4 shadow-md`}
+            >
+              <h2 className="mb-4 text-center text-lg font-semibold text-gray-800">
                 {activity.name}
               </h2>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-2">
                 <div
-                  className={`aspect-square rounded-lg ${getColorClass(activity.color)} flex flex-col items-center justify-center p-2 text-center`}
+                  className={`rounded-lg border-b-4 ${getDarkBorderClass(activity.color)}`}
                 >
-                  <p className="text-3xl font-bold text-white">
-                    {activity.completedCount}
-                  </p>
-                  <span className="text-xs font-medium text-white">
-                    Completadas
-                  </span>
+                  <div
+                    className={`aspect-square rounded-md ${getColorClass(activity.color)} flex flex-col items-center justify-center p-2 text-center`}
+                  >
+                    <p className="text-3xl font-bold text-white">
+                      {activity.completedCount}
+                    </p>
+                    <span className="text-[9px] font-medium text-white">
+                      Completadas
+                    </span>
+                  </div>
                 </div>
+
+                {/* Letter progress squares with 3D effect */}
                 {activity.letters.map((letterProgress, letterIndex) => (
-                  <div key={letterIndex} className="relative">
+                  <div
+                    key={letterIndex}
+                    className={`rounded-lg border-b-4 ${getDarkBorderClass(activity.color)}`}
+                  >
                     <div
-                      className={`aspect-square rounded-lg ${getColorClass(activity.color, true)} overflow-hidden border shadow-lg ${getBorderColorClass(activity.color)}`}
+                      className={`aspect-square rounded-md ${getColorClass(activity.color, true)} overflow-hidden border-t border-r border-l ${getBorderColorClass(activity.color)} relative`}
                     >
                       {/* Progress fill */}
                       <div
-                        className={`absolute bottom-0 left-0 w-full rounded-b-lg ${getColorClass(activity.color)}`}
+                        className={`absolute bottom-0 left-0 w-full rounded-b-md ${getColorClass(activity.color)}`}
                         style={{
                           height: `${letterProgress.progress}%`,
                           transition: "height 0.3s ease-in-out",
