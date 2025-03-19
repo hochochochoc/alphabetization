@@ -42,17 +42,17 @@ app.post("/api/session", async (req, res) => {
       options,
       user_answer,
       correct,
-      test_type = "listening", // Default to listening if not specified
+      exercise_type = "listening", // Default to listening
     } = req.body;
 
     const [result] = await pool.query(
-      "INSERT INTO guess_history (target_letter, options, user_answer, correct, test_type) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO guess_history (target_letter, options, user_answer, correct, exercise_type) VALUES (?, ?, ?, ?, ?)",
       [
         target_letter,
         options.join(","),
         user_answer,
         correct ? 1 : 0,
-        test_type,
+        exercise_type,
       ],
     );
 
@@ -72,7 +72,7 @@ app.get("/api/writing_progress", async (req, res) => {
         COUNT(*) as total_attempts,
         ROUND((SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as progress_percentage
       FROM guess_history 
-      WHERE test_type = 'writing'
+      WHERE exercise_type = 'writing'
       GROUP BY target_letter
     `);
 
