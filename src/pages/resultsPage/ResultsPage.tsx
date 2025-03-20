@@ -47,7 +47,7 @@ const ResultsPage = () => {
         const progressMap = data.reduce(
           (acc: ProgressMap, item: ProgressItem) => {
             acc[item.target_letter] = {
-              progress_percentage: item.progress_percentage,
+              progress_percentage: calculateNormalizedProgress(item),
               total_attempts: item.total_attempts,
             };
             return acc;
@@ -65,6 +65,16 @@ const ResultsPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Calculate normalized progress: max out at 10 attempts, percentage based on correct answers
+  const calculateNormalizedProgress = (item: ProgressItem): number => {
+    // If they've done more than 10 attempts, we consider only the percentage
+    if (item.total_attempts >= 10) {
+      return item.progress_percentage;
+    }
+    // If fewer than 10 attempts, calculate scaled percentage based on what they've done
+    return (item.progress_percentage * item.total_attempts) / 10;
+  };
+
   const activities: Activity[] = [
     {
       name: "Escuchar",
@@ -77,10 +87,10 @@ const ResultsPage = () => {
           letter,
           progress: data.progress_percentage || 0,
         }))
+        .filter((item) => item.progress < 100) // Filter out completed letters
         .sort((a, b) => b.progress - a.progress)
-        .slice(0, 5),
+        .slice(0, 7),
     },
-
     {
       name: "Escribir",
       color: "green",
@@ -91,7 +101,7 @@ const ResultsPage = () => {
         { letter: "Q", progress: 25 },
         { letter: "V", progress: 15 },
         { letter: "W", progress: 8 },
-      ],
+      ].filter((item) => item.progress < 100), // Filter out completed letters
     },
     {
       name: "Leer",
@@ -103,7 +113,7 @@ const ResultsPage = () => {
         { letter: "J", progress: 30 },
         { letter: "Z", progress: 20 },
         { letter: "K", progress: 5 },
-      ],
+      ].filter((item) => item.progress < 100), // Filter out completed letters
     },
   ];
 
