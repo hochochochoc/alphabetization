@@ -330,6 +330,7 @@ const WritingTestPage: React.FC = () => {
             options: [rounds[currentRound].letter], // In writing test there are no options to choose from
             user_answer: rounds[currentRound].letter, // The user's attempted letter is the target letter
             correct: isCorrect,
+            exercise_type: "writing",
           }),
         });
       } catch (error) {

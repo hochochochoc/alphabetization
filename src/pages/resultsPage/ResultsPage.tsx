@@ -36,15 +36,17 @@ const ResultsPage = () => {
   const navigate = useNavigate();
 
   const [listeningProgress, setListeningProgress] = useState<ProgressMap>({});
+  const [writingProgress, setWritingProgress] = useState<ProgressMap>({});
 
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const response = await fetch(
+        // Fetch listening progress
+        const listeningResponse = await fetch(
           "http://localhost:3001/api/listening_progress",
         );
-        const data = await response.json();
-        const progressMap = data.reduce(
+        const listeningData = await listeningResponse.json();
+        const listeningMap = listeningData.reduce(
           (acc: ProgressMap, item: ProgressItem) => {
             acc[item.target_letter] = {
               progress_percentage: calculateNormalizedProgress(item),
@@ -54,7 +56,24 @@ const ResultsPage = () => {
           },
           {},
         );
-        setListeningProgress(progressMap);
+        setListeningProgress(listeningMap);
+
+        // Fetch writing progress
+        const writingResponse = await fetch(
+          "http://localhost:3001/api/writing_progress",
+        );
+        const writingData = await writingResponse.json();
+        const writingMap = writingData.reduce(
+          (acc: ProgressMap, item: ProgressItem) => {
+            acc[item.target_letter] = {
+              progress_percentage: calculateNormalizedProgress(item),
+              total_attempts: item.total_attempts,
+            };
+            return acc;
+          },
+          {},
+        );
+        setWritingProgress(writingMap);
       } catch (error) {
         console.error("Error fetching progress:", error);
       }
@@ -94,14 +113,17 @@ const ResultsPage = () => {
     {
       name: "Escribir",
       color: "green",
-      completedCount: 12,
-      letters: [
-        { letter: "D", progress: 60 },
-        { letter: "LL", progress: 45 },
-        { letter: "Q", progress: 25 },
-        { letter: "V", progress: 15 },
-        { letter: "W", progress: 8 },
-      ].filter((item) => item.progress < 100), // Filter out completed letters
+      completedCount: Object.values(writingProgress).filter(
+        (p) => p.progress_percentage >= 100,
+      ).length,
+      letters: Object.entries(writingProgress)
+        .map(([letter, data]) => ({
+          letter,
+          progress: data.progress_percentage || 0,
+        }))
+        .filter((item) => item.progress < 100) // Filter out completed letters
+        .sort((a, b) => b.progress - a.progress)
+        .slice(0, 7),
     },
     {
       name: "Leer",
@@ -113,7 +135,7 @@ const ResultsPage = () => {
         { letter: "J", progress: 30 },
         { letter: "Z", progress: 20 },
         { letter: "K", progress: 5 },
-      ].filter((item) => item.progress < 100), // Filter out completed letters
+      ].filter((item) => item.progress < 100),
     },
   ];
 
