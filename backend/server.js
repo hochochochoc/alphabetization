@@ -85,3 +85,23 @@ app.get("/api/writing_progress", async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Get progress for reading tests
+app.get("/api/reading_progress", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        target_letter,
+        COUNT(*) as total_attempts,
+        ROUND((SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as progress_percentage
+      FROM guess_history 
+      WHERE exercise_type = 'reading'
+      GROUP BY target_letter
+    `);
+
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});

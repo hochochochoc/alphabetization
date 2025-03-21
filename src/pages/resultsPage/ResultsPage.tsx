@@ -37,6 +37,7 @@ const ResultsPage = () => {
 
   const [listeningProgress, setListeningProgress] = useState<ProgressMap>({});
   const [writingProgress, setWritingProgress] = useState<ProgressMap>({});
+  const [readingProgress, setReadingProgress] = useState<ProgressMap>({});
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -74,6 +75,23 @@ const ResultsPage = () => {
           {},
         );
         setWritingProgress(writingMap);
+
+        // Fetch reading progress
+        const readingResponse = await fetch(
+          "http://localhost:3001/api/reading_progress",
+        );
+        const readingData = await readingResponse.json();
+        const readingMap = readingData.reduce(
+          (acc: ProgressMap, item: ProgressItem) => {
+            acc[item.target_letter] = {
+              progress_percentage: calculateNormalizedProgress(item),
+              total_attempts: item.total_attempts,
+            };
+            return acc;
+          },
+          {},
+        );
+        setReadingProgress(readingMap);
       } catch (error) {
         console.error("Error fetching progress:", error);
       }
@@ -128,14 +146,17 @@ const ResultsPage = () => {
     {
       name: "Leer",
       color: "yellow",
-      completedCount: 18,
-      letters: [
-        { letter: "F", progress: 80 },
-        { letter: "G", progress: 55 },
-        { letter: "J", progress: 30 },
-        { letter: "Z", progress: 20 },
-        { letter: "K", progress: 5 },
-      ].filter((item) => item.progress < 100),
+      completedCount: Object.values(readingProgress).filter(
+        (p) => p.progress_percentage >= 100,
+      ).length,
+      letters: Object.entries(readingProgress)
+        .map(([letter, data]) => ({
+          letter,
+          progress: data.progress_percentage || 0,
+        }))
+        .filter((item) => item.progress < 100) // Filter out completed letters
+        .sort((a, b) => b.progress - a.progress)
+        .slice(0, 7),
     },
   ];
 

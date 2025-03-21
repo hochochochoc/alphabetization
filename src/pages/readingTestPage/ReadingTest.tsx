@@ -227,7 +227,7 @@ const ReadingTestPage = () => {
   };
 
   // This function directly checks if the transcription matches the expected letter or pronunciation
-  const checkPronunciation = (transcript: string) => {
+  const checkPronunciation = async (transcript: string) => {
     try {
       setIsLoading(true);
 
@@ -386,6 +386,21 @@ const ReadingTestPage = () => {
         dispatch(playIncorrectSound());
         setScore(0);
       }
+
+      // Send session data to the server
+      await fetch("http://localhost:3001/api/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target_letter: currentLetter,
+          options: [],
+          user_answer: cleanTranscript,
+          correct: isCorrect,
+          exercise_type: "reading",
+        }),
+      });
     } catch (error) {
       console.error("Error checking pronunciation:", error);
       setResult("incorrect");
