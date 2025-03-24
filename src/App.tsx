@@ -1,5 +1,7 @@
 import "./index.css";
 import { Route, Routes } from "react-router-dom";
+import { Amplify } from "aws-amplify";
+import { awsConfig } from "./config/awsConfig";
 import LandingPage from "./pages/landingPage/LandingPage";
 import TestPage from "./pages/testPage/TestPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
@@ -8,9 +10,9 @@ import ResultsPage from "./pages/resultsPage/ResultsPage";
 import WritingTestPage from "./pages/writingTestPage.tsx/writingTest";
 import WritingInputPage from "./pages/writingInputPage/writingInputPage";
 import ReadingTestPage from "./pages/readingTestPage/ReadingTest";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
+
+Amplify.configure(awsConfig);
 
 function App() {
   return (
@@ -24,8 +26,6 @@ function App() {
         <Route path="/writing" element={<WritingTestPage />} />
         <Route path="/writinginput" element={<WritingInputPage />} />
         <Route path="/reading" element={<ReadingTestPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
       </Routes>
     </AuthProvider>
   );
