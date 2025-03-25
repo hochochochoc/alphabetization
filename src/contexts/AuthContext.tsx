@@ -1,16 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { signUp, signIn, signOut, getCurrentUser } from "aws-amplify/auth";
+import {
+  signUp,
+  signIn,
+  signOut,
+  getCurrentUser,
+  confirmSignUp,
+  fetchAuthSession,
+  type AuthUser,
+  SignInOutput,
+} from "aws-amplify/auth";
 
 interface AuthContextType {
-  currentUser: any | null;
+  currentUser: AuthUser | null;
   loading: boolean;
   signup: (
     email: string,
     password: string,
     displayName: string,
   ) => Promise<any>;
-  login: (email: string, password: string) => Promise<any>;
-  loginAnonymously: () => Promise<void>;
+  confirmSignup: (email: string, code: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<SignInOutput>;
   logout: () => Promise<void>;
 }
 
@@ -23,24 +32,51 @@ export function useAuth() {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [username, setUsername] = useState<string | null>(null);
 
   async function signup(email: string, password: string, displayName: string) {
     try {
+      // Generate a unique username instead of using email
+      const generatedUsername = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log("Generated username:", generatedUsername);
       const result = await signUp({
-        username: email,
+        username: generatedUsername,
         password,
         options: {
           userAttributes: {
             email,
             name: displayName,
           },
+          autoSignIn: {
+            enabled: true,
+          },
         },
       });
+
+      setUsername(generatedUsername);
       return result;
     } catch (error) {
       console.error("Error signing up:", error);
+      throw error;
+    }
+  }
+
+  async function confirmSignup(code: string) {
+    if (!username) {
+      throw new Error("Username is not set. Please sign up first.");
+    }
+
+    try {
+      console.log("Confirming signup for username:", username);
+      const result = await confirmSignUp({
+        username: username,
+        confirmationCode: code,
+      });
+      return result;
+    } catch (error) {
+      console.error("Error confirming sign up:", error);
       throw error;
     }
   }
@@ -51,16 +87,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         username: email,
         password,
       });
-      setCurrentUser(result);
+
+      // Only set currentUser if sign in is complete
+      if (result.isSignedIn) {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      }
+
       return result;
     } catch (error) {
       console.error("Error logging in:", error);
       throw error;
     }
-  }
-
-  async function loginAnonymously() {
-    throw new Error("Anonymous login is not supported with AWS Cognito");
   }
 
   async function logout() {
@@ -79,8 +117,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   async function checkUser() {
     try {
-      const user = await getCurrentUser();
-      setCurrentUser(user);
+      // Check if user has a valid session
+      const { tokens } = await fetchAuthSession();
+
+      if (tokens) {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
+      }
     } catch (error) {
       setCurrentUser(null);
     } finally {
@@ -92,8 +137,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     currentUser,
     loading,
     signup,
+    confirmSignup: (code: string) => confirmSignup(code),
     login,
-    loginAnonymously,
     logout,
   };
 

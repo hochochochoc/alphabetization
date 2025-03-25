@@ -1,13 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/BottomNav";
 import { useAuth } from "../../contexts/AuthContext";
+import { fetchUserAttributes } from "aws-amplify/auth";
+
+interface UserAttributes {
+  email?: string;
+  name?: string;
+}
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, logout, loginAnonymously } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [userAttributes, setUserAttributes] = useState<UserAttributes>({});
+
+  useEffect(() => {
+    const loadUserAttributes = async () => {
+      if (currentUser) {
+        try {
+          const attributes = await fetchUserAttributes();
+          setUserAttributes({
+            email: attributes.email,
+            name: attributes.name,
+          });
+        } catch (error) {
+          console.error("Error fetching user attributes:", error);
+        }
+      }
+    };
+
+    loadUserAttributes();
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -21,18 +45,6 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleAnonymousLogin = async () => {
-    try {
-      setIsLoggingIn(true);
-      await loginAnonymously();
-      // No need to navigate - we'll stay on this page
-    } catch (error) {
-      console.error("Failed to log in anonymously", error);
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
   // If user is logged in, show user profile
   if (currentUser) {
     return (
@@ -43,25 +55,16 @@ const ProfilePage: React.FC = () => {
           <div className="mb-6 flex flex-col items-center">
             <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-blue-200">
               <span className="text-3xl font-bold text-blue-600">
-                {currentUser.displayName
-                  ? currentUser.displayName.charAt(0).toUpperCase()
-                  : currentUser.isAnonymous
-                    ? "A"
-                    : "U"}
+                {userAttributes.name
+                  ? userAttributes.name.charAt(0).toUpperCase()
+                  : "U"}
               </span>
             </div>
             <h3 className="text-xl font-semibold">
-              {currentUser.displayName ||
-                (currentUser.isAnonymous ? "Usuario Anónimo" : "Usuario")}
+              {userAttributes.name || "Usuario"}
             </h3>
-            {currentUser.email && (
-              <p className="text-gray-600">{currentUser.email}</p>
-            )}
-            {currentUser.isAnonymous && (
-              <p className="mt-2 text-sm text-amber-600">
-                Has iniciado sesión de forma anónima. Tu progreso se guardará en
-                este dispositivo.
-              </p>
+            {userAttributes.email && (
+              <p className="text-gray-600">{userAttributes.email}</p>
             )}
           </div>
 
@@ -72,15 +75,6 @@ const ProfilePage: React.FC = () => {
             >
               Ver mi progreso
             </button>
-
-            {currentUser.isAnonymous && (
-              <button
-                onClick={() => navigate("/signup")}
-                className="w-full rounded-md bg-green-100 px-4 py-2 font-medium text-green-700 transition-colors hover:bg-green-200"
-              >
-                Crear cuenta permanente
-              </button>
-            )}
 
             <button
               onClick={handleLogout}
@@ -119,23 +113,6 @@ const ProfilePage: React.FC = () => {
             className="w-full rounded-md bg-gray-200 px-4 py-3 font-medium text-gray-700 uppercase transition-colors hover:bg-gray-300"
           >
             Iniciar sesión
-          </button>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">O</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleAnonymousLogin}
-            disabled={isLoggingIn}
-            className="w-full rounded-md bg-amber-100 px-4 py-3 font-medium text-amber-800 transition-colors hover:bg-amber-200"
-          >
-            {isLoggingIn ? "Iniciando..." : "Continuar como invitado"}
           </button>
         </div>
       </div>

@@ -19,11 +19,19 @@ const Login: React.FC = () => {
       setLoading(true);
       await login(email, password);
       navigate("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(
-        "Error al iniciar sesión. Por favor, verifica tus credenciales.",
-      );
+
+      // Handle AWS Cognito specific errors
+      if (err.name === "NotAuthorizedException") {
+        setError("Correo electrónico o contraseña incorrectos.");
+      } else if (err.name === "UserNotFoundException") {
+        setError("No se encontró una cuenta con este correo electrónico.");
+      } else if (err.name === "UserNotConfirmedException") {
+        setError("Por favor, confirma tu correo electrónico primero.");
+      } else {
+        setError("Error al iniciar sesión. Por favor, intenta nuevamente.");
+      }
     }
 
     setLoading(false);
