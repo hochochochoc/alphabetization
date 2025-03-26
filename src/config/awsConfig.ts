@@ -1,9 +1,9 @@
 export const awsConfig = {
   Auth: {
     Cognito: {
-      userPoolId: "eu-west-3_ZlSturcjQ",
-      userPoolClientId: "56omurop82nikgflro32a4fppr", // Your new SPA client ID
-      identityPoolId: "eu-west-3:4b0c2f8e-5b9f-4a2d-a1a5-7f0e0c4b1d3a",
+      userPoolId: "eu-west-3_ZtGH37iGb",
+      userPoolClientId: "1ug6cl6l0ejr8mcpsl0jds2mt2",
+      identityPoolId: "eu-west-3:474062d3-60a0-4d56-a367-ddd6e86a6bf3",
       region: "eu-west-3",
       signUpVerificationMethod: "code",
       loginWith: {

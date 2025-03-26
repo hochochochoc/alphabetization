@@ -20,6 +20,7 @@ const ProfilePage: React.FC = () => {
       if (currentUser) {
         try {
           const attributes = await fetchUserAttributes();
+          console.log("User attributes:", attributes);
           setUserAttributes({
             email: attributes.email,
             name: attributes.name,

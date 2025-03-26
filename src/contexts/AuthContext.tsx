@@ -34,7 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [username, setUsername] = useState<string | null>(null);
 
   async function signup(email: string, password: string, displayName: string) {
     try {
@@ -42,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const generatedUsername = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       console.log("Generated username:", generatedUsername);
       const result = await signUp({
-        username: generatedUsername,
+        username: email,
         password,
         options: {
           userAttributes: {
@@ -55,7 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
 
-      setUsername(generatedUsername);
       return result;
     } catch (error) {
       console.error("Error signing up:", error);
@@ -63,15 +61,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
-  async function confirmSignup(code: string) {
-    if (!username) {
-      throw new Error("Username is not set. Please sign up first.");
-    }
-
+  async function confirmSignup(email: string, code: string) {
     try {
-      console.log("Confirming signup for username:", username);
+      console.log("Confirming signup for email:", email);
       const result = await confirmSignUp({
-        username: username,
+        username: email,
         confirmationCode: code,
       });
       return result;
@@ -83,6 +77,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   async function login(email: string, password: string) {
     try {
+      try {
+        await signOut();
+      } catch (e) {
+        // Ignores errors during sign out
+      }
+
       const result = await signIn({
         username: email,
         password,
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     currentUser,
     loading,
     signup,
-    confirmSignup: (code: string) => confirmSignup(code),
+    confirmSignup,
     login,
     logout,
   };
