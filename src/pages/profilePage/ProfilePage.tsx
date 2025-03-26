@@ -72,7 +72,7 @@ const ProfilePage: React.FC = () => {
           <div className="space-y-4">
             <button
               onClick={() => navigate("/history")}
-              className="w-full rounded-md bg-blue-100 px-4 py-2 font-medium text-blue-700 transition-colors hover:bg-blue-200"
+              className="w-full rounded-md bg-blue-100 px-4 py-3 font-medium text-blue-700 uppercase transition-colors hover:bg-blue-200"
             >
               Ver mi progreso
             </button>
@@ -80,7 +80,7 @@ const ProfilePage: React.FC = () => {
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="w-full rounded-md bg-red-100 px-4 py-2 font-medium text-red-700 transition-colors hover:bg-red-200"
+              className="w-full rounded-md bg-red-100 px-4 py-3 font-medium text-red-700 uppercase transition-colors hover:bg-red-300"
             >
               {isLoggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
             </button>
